@@ -1,0 +1,73 @@
+#config.yaml
+
+genome: /home/simone/mnt/part1/smk_wes/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa
+
+intervals: /home/simone/mnt/part1/masto_wes/resources/SureSelectV8.wes.mod.bed
+
+chr_to_exclude: /home/simone/mnt/part1/masto_wes/resources/GRCh38_full_analysis_set_plus_decoy_hla.exclude.txt
+
+gnomAD: /home/simone/mnt/qnap/resources/databases/af-only-gnomad.hg38.norm.vcf.gz
+
+gatk_pon: /home/simone/mnt/qnap/resources/databases/1000g_pon.hg38.norm.realign.vcf.gz
+
+  
+tumors:
+
+  tumor1: A0030
+  tumor2: A0340
+  tumor3: A0734
+  tumor4: A0789
+  tumor5: A0934
+
+strand:
+  
+  strandR1: R1
+  strandR2: R2
+
+controls:
+  
+  control1: CD37493
+  control2: CD31983
+  control3: CD37846
+  control4: CD39887
+  control5: CD3A0066
+
+paired:
+
+    paired1: tumor
+    paired2: germline
+
+# Set number of cores 
+threads: 5
+
+# PARAMETERS FOR CONTROLS FILTERING 
+filtering_controls:
+
+## Minimum read depth to call a variant (50 suggested)   
+  min_depth: 100
+
+## Minimum variant allele frequency (1% suggested)  
+  vaf: 0.01
+
+## Minimum variant supporting reads (5 suggested)   
+  alt_depth: 5
+
+# PARAMETERS FOR SAMPLES FILTERING 
+filtering_tumors:
+  
+  ## Minimum read depth to call a variant (50 suggested)   
+  min_depth: 50
+
+  ## Minimum variant allele frequency (3% suggested)  
+  vaf: 0.03
+
+  ## Minimum variant supporting reads (5 suggested)   
+  alt_depth: 5
+
+
+callers:
+  
+  caller1: mutect
+  caller2: 
+  caller3: 
+  caller4: 

@@ -1,0 +1,6 @@
+channels:
+ - bioconda
+dependencies:
+ - samtools=1.19
+ - htslib=1.19
+ - libcurl=8.5.0

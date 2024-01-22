@@ -76,33 +76,56 @@ rule FilterMutectCallsPaired:
 		"v3.3.3/bio/gatk/filtermutectcalls"
 
 #######################################################################################   VARSCAN   #######################################################################################
+
 rule GermlineMpileup:
-	input:
-		bam="alignments/{sample}.germline.dd.rec.bam",
-		ref=config["genome"],
-	output:
-		"data/mpileup/{sample}.germline.mpileup",
-	threads: 1
-	log:
-		"logs/{sample}.GermlineMpileup.log",
-	conda:
-		"../envs/samtools.yaml"
-	shell:
-		"samtools mpileup -d 10000 -f {input.ref} {input.bam}"
+    input:
+        # single or list of bam files
+        bam="alignments/{sample}.germline.dd.rec.bam",
+        reference_genome=config["genome"],
+    output:
+        "data/mpileup/{sample}.germline.mpileup.gz",
+    log:
+        "logs/{sample}.GermlineMpileup.log",
+    params:
+        extra="-d 10000",  # optional
+    wrapper:
+        "v3.3.3/bio/samtools/mpileup"
 
 rule TumorMpileup:
+    input:
+        # single or list of bam files
+        bam="alignments/{sample}.tumor.dd.rec.bam",
+        reference_genome=config["genome"],
+    output:
+        "data/mpileup/{sample}.tumor.mpileup.gz",
+    log:
+        "logs/{sample}.TumorMpileup.log",
+    params:
+        extra="-d 10000",  # optional
+    wrapper:
+        "v3.3.3/bio/samtools/mpileup"
+
+rule BgzipGermlineMpileup:
 	input:
-		bam="alignments/{sample}.tumor.dd.rec.bam",
-		ref=config["genome"],
+		"data/mpileup/{sample}.germline.mpileup.gz"
 	output:
-		"data/mpileup/{sample}.tumor.mpileup",
-	threads: 1
+		"data/mpileup/{sample}.germline.mpileup"
 	log:
-		"logs/{sample}.TumorMpileup.log",
-	conda:
-		"../envs/samtools.yaml"
+		"logs/{sample}.BgzipGermlineMpileup.log"
+	threads:1
 	shell:
-		"samtools mpileup -d 10000 -f {input.ref} {input.bam}"
+		"bgzip -d {input}"
+
+rule BgzipTumorMpileup:
+	input:
+		"data/mpileup/{sample}.tumor.mpileup.gz"
+	output:
+		"data/mpileup/{sample}.tumor.mpileup"
+	log:
+		"logs/{sample}.BgzipTumorMpileup.log"
+	threads:1
+	shell:
+		"bgzip -d {input}"
 
 rule VarscanSomatic:
 	input:
@@ -121,19 +144,50 @@ rule VarscanSomatic:
 	shell:
 		"varscan somatic {input.normal_pileup} {input.tumor_pileup} --output-vcf --min-avg-qual 15 --p-value 0.05 --min-var-freq 0.03  --output-snp {output.snp} --output-indel {output.indel} 2>{log}"
 
-rule MergeVarscanOutput:
+rule VarscanBgzipIndex:
 	input:
 		snp="results/{sample}.varscan.paired.snp.vcf",
-		indel="results/{sample}.varscan.paired.indel.vcf",
+		indel="results/{sample}.varscan.paired.indel.vcf"
 	output:
-		temp("results/{sample}.varscan.paired.tmp.vcf.gz")
-	threads: 1 
+		snpbg=temp("results/{sample}.varscan.paired.snp.vcf.gz"),
+		indelbg=temp("results/{sample}.varscan.paired.indel.vcf.gz"),
+		snpix=temp("results/{sample}.varscan.paired.snp.vcf.gz.tbi"),
+		indelix=temp("results/{sample}.varscan.paired.indel.vcf.gz.tbi")
 	log:
-		"logs/{sample}.varscan.log"
-	conda:
-		"../envs/bcftools.yaml"
+		"logs/{sample}.VarscanBgzipIndex.log"
+	threads:1
 	shell:
-		"bcftools concat -a -O z -o {output} {input.snp} {input.indel} 2>{log}"
+		"bgzip {input.snp} && tabix {output.snpbg} 2>{log} && bgzip {input.indel} && tabix {output.indelbg} 2>{log}"
+
+rule MergeVarscanOutput:
+    input:
+        calls=["results/{sample}.varscan.paired.snp.vcf.gz", "results/{sample}.varscan.paired.indel.vcf.gz"],
+    output:
+        temp("results/{sample}.varscan.paired.tmp.vcf.gz")
+    log:
+        "logs/{sample}.MergeVarscanOutput.log",
+    params:
+        uncompressed_bcf=True,
+        extra="-a",  # optional parameters for bcftools concat (except -o)
+    threads: 1
+    resources:
+        mem_mb=10,
+    wrapper:
+        "v3.3.3/bio/bcftools/concat"
+
+#rule MergeVarscanOutput:
+#	input:
+#		snp="results/{sample}.varscan.paired.snp.vcf",
+#		indel="results/{sample}.varscan.paired.indel.vcf",
+#	output:
+#		temp("results/{sample}.varscan.paired.tmp.vcf.gz")
+#	threads: 1 
+#	log:
+#		"logs/{sample}.varscan.log"
+#	conda:
+#		"../envs/bcftools.yaml"
+#	shell:
+#		"bcftools concat -a -O z -o {output} {input.snp} {input.indel} 2>{log}"
 
 rule ReheaderVarscanOutput:
 	input:

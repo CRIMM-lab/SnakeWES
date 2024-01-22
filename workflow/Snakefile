@@ -61,12 +61,14 @@ rule freebayes:
 
 rule paired:
 	input:
-		expand(f"qc/{{sample}}_{{type}}_{{strand}}_fastqc.html", sample=config["tumors"].values(), type=config["paired"].values(), strand=config["strand"].values()),
-		expand(f"qc/{{sample}}_{{type}}_{{strand}}_tr_fastqc.html", sample=config["tumors"].values(), type=config["paired"].values(), strand=config["strand"].values()),
-		expand(f"alignments/{{sample}}.{{type}}.dd.rec.bam", sample=config["tumors"].values(),type=config["paired"].values()),
-		expand(f"qc/{{sample}}.{{type}}.qc.tsv.gz.pdf", sample=config["tumors"].values(),type=config["paired"].values()),
-		expand(f"results/{{sample}}.mutect2.paired.filtered.vcf.gz",sample=config["tumors"].values()),
-		expand(f"results/{{sample}}.varscan.paired.vcf.gz",sample=config["tumors"].values())
+		#expand(f"qc/{{sample}}_{{type}}_{{strand}}_fastqc.html", sample=config["tumors"].values(), type=config["paired"].values(), strand=config["strand"].values()),
+		#expand(f"qc/{{sample}}_{{type}}_{{strand}}_tr_fastqc.html", sample=config["tumors"].values(), type=config["paired"].values(), strand=config["strand"].values()),
+		#expand(f"alignments/{{sample}}.{{type}}.dd.rec.bam", sample=config["tumors"].values(),type=config["paired"].values()),
+		#expand(f"qc/{{sample}}.{{type}}.qc.tsv.gz.pdf", sample=config["tumors"].values(),type=config["paired"].values()),
+		#expand(f"results/{{sample}}.mutect2.paired.filtered.vcf.gz",sample=config["tumors"].values()),
+		expand(f"results/{{sample}}.varscan.paired.snp.vcf.gz.tbi",sample=config["tumors"].values()),
+		expand(f"results/{{sample}}.varscan.paired.indel.vcf.gz.tbi",sample=config["tumors"].values()),
+		expand(f"results/{{sample}}.varscan.paired.tmp.vcf.gz",sample=config["tumors"].values())
 
 
 #rule vep_annotation: 

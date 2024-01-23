@@ -175,20 +175,6 @@ rule MergeVarscanOutput:
     wrapper:
         "v3.3.3/bio/bcftools/concat"
 
-#rule MergeVarscanOutput:
-#	input:
-#		snp="results/{sample}.varscan.paired.snp.vcf",
-#		indel="results/{sample}.varscan.paired.indel.vcf",
-#	output:
-#		temp("results/{sample}.varscan.paired.tmp.vcf.gz")
-#	threads: 1 
-#	log:
-#		"logs/{sample}.varscan.log"
-#	conda:
-#		"../envs/bcftools.yaml"
-#	shell:
-#		"bcftools concat -a -O z -o {output} {input.snp} {input.indel} 2>{log}"
-
 rule ReheaderVarscanOutput:
 	input:
 		"results/{sample}.varscan.paired.tmp.vcf.gz"
@@ -202,6 +188,7 @@ rule ReheaderVarscanOutput:
 	conda:
 		"../envs/bcftools.yaml"
 	shell: 
-		"echo {wildcards.sample} > {params.txt} && "
+		"echo {wildcards.sample}_germline > {params.txt} && "
+		"echo {wildcards.sample}_tumor >> {params.txt} && "
 		"bcftools reheader -s {params.txt} -o {output} {input} && "
 		"rm {params.txt}"

@@ -1,179 +1,200 @@
 rule varscan_call_snv_on_controls: 
 	input:
-		bam="data/bam/{control}.dedup.recal.bam",
-		bai="data/bam/{control}.dedup.recal.bam.bai"
+		bam="alignments/{sample}.control.dd.rec.bam",
+		bai="alignments/{sample}.control.dd.rec.bai"
 	output:
-		vcf_snv=temp("results/varscan/custom_pon/{control}.ctr.varscan.snv.vcf.gz"),
-		tbi_snv=temp("results/varscan/custom_pon/{control}.ctr.varscan.snv.vcf.gz.tbi")
+		vcf_snv=temp("results/{sample}_control/{sample}.varscan.snv.vcf.gz"),
+		tbi_snv=temp("results/{sample}_control/{sample}.varscan.snv.vcf.gz.tbi")
+	message:
+		"varscan call snv - control {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.varscan.snv.callandNorm.txt"
 	threads: 1
 	params:
-		varscan="/home/simone/programs/VarScan.v2.3.9.jar",
+		#varscan="/home/simone/programs/VarScan.v2.3.9.jar",
 		intervals=config["intervals"],
 		ref=config["genome"],
-		#vcf_tmp=temp("results/varscan/custom_pon/{control}.ctr.varscan.snv.vcf")
+	conda:
+		"../envs/varscan.yaml"
 	log:
-		"logs/{control}.varscan.snv.callandNorm.log"
+		"logs/{sample}.varscan.snv.callandNorm.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} | "
-		"java -jar {params.varscan} mpileup2snp --output-vcf 1 --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 | "
+		"varscan mpileup2snp --output-vcf 1 --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 | "
 		"bgzip -c > {output.vcf_snv} 2> {log} &&"
 		"tabix -p vcf {output.vcf_snv}"
 
-rule varscan_call_indel_on_controls: 
+rule varscan_call_snv_on_tumors: 
 	input:
-		bam="data/bam/{control}.dedup.recal.bam",
-		bai="data/bam/{control}.dedup.recal.bam.bai"
+		bam="alignments/{sample}.tumor.dd.rec.bam",
+		bai="alignments/{sample}.tumor.dd.rec.bai"
 	output:
-		vcf_indel=temp("results/varscan/custom_pon/{control}.ctr.varscan.indel.vcf.gz"),
-		tbi_indel=temp("results/varscan/custom_pon/{control}.ctr.varscan.indel.vcf.gz.tbi")
+		vcf_snv=temp("results/{sample}_tumor/{sample}.varscan.snv.vcf.gz"),
+		tbi_snv=temp("results/{sample}_tumor/{sample}.varscan.snv.vcf.gz.tbi")
 	threads: 1
 	params:
-		varscan="/home/simone/programs/VarScan.v2.3.9.jar",
+		#varscan="/home/simone/programs/VarScan.v2.3.9.jar",
 		intervals=config["intervals"],
 		ref=config["genome"]
-	log:
-		"logs/{control}.varscan.indel.callandNorm.log"
-	shell:
-		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} |"
-		"java -jar {params.varscan} mpileup2indel --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 |"
-		"bgzip -c > {output.vcf_indel} 2> {log} &&"
-		"tabix -p vcf {output.vcf_indel}"
-		
-rule varscan_concat_controls: 
-	input:
-		vcf_snv="results/varscan/custom_pon/{control}.ctr.varscan.snv.vcf.gz",
-		vcf_indel="results/varscan/custom_pon/{control}.ctr.varscan.indel.vcf.gz",
-		tbi_snv="results/varscan/custom_pon/{control}.ctr.varscan.snv.vcf.gz.tbi",
-		tbi_indel="results/varscan/custom_pon/{control}.ctr.varscan.indel.vcf.gz.tbi"
-	output:
-		vcf_concat=temp("results/varscan/custom_pon/{control}.ctr.varscan.concat.vcf.gz")
-	params: 
-		vcf_tmp="results/varscan/custom_pon/{control}.ctr.varscan.tmp.vcf",
-		ref=config["genome"]
-	threads: 1
-	log:
-		"logs/{control}.varscan.concat.log"
-	shell: 
-		"bcftools concat -a -Ov -o {params.vcf_tmp} {input.vcf_snv} {input.vcf_indel} && "
-		"cat <(bcftools view -h {params.vcf_tmp} | sed -e 's/<ID=FREQ,Number=1,Type=String/<ID=FREQ,Number=A,Type=Float/g') <(bcftools view -H {params.vcf_tmp} | sed 's/%//g' | sed 's/,/./g') | "
-		"bcftools norm -Oz -m - -f {params.ref} -Oz -o {output.vcf_concat} 2> {log} && "
-		"rm {params.vcf_tmp}"
-
-rule varscan_reheader_controls:
-	input:
-		"results/varscan/custom_pon/{control}.ctr.varscan.concat.vcf.gz"
-	output:
-		"results/varscan/custom_pon/{control}.ctr.varscan.vcf.gz"
-	threads: 1
-	params:
-		txt="results/varscan/custom_pon/{control}.rh.txt"
-	log:
-		"logs/{control}.varscan.rh.log"
-	shell: 
-		"echo {wildcards.control} > {params.txt} && "
-		"bcftools reheader -s {params.txt} -o {output} {input} && "
-		"rm {params.txt}"
-
-rule filter_varscan_controls_vars: 
-	input:
-		"results/varscan/custom_pon/{control}.ctr.varscan.vcf.gz"
-	output:
-		vcf="results/varscan/custom_pon/{control}.ctr.varscan.filt.vcf.gz",
-		tbi="results/varscan/custom_pon/{control}.ctr.varscan.filt.vcf.gz.tbi"
-	threads: 1
-	params:
-		chr_to_exclude=config["chr_to_exclude"]
-	log:
-		"logs/{control}.filter.varscan.log"
-	shell:
-		"bcftools view -Ov -i 'FORMAT/ADF >= 1 && FORMAT/ADR >= 1 && FREQ >= 1' {input} |"
-		"grep -v -f {params.chr_to_exclude} |"
-		"bcftools sort -Oz -o {output.vcf} 2> {log} &&"
-		"tabix -f -p vcf {output.vcf}"
-
-rule merge_varscan_controls_variants:
-	input:
-		vcf=expand(f"results/varscan/custom_pon/{{control}}.ctr.varscan.filt.vcf.gz", control=config['controls'].values()),
-		tbi=expand(f"results/varscan/custom_pon/{{control}}.ctr.varscan.filt.vcf.gz.tbi", control=config['controls'].values())
-	output:
-		vcf="results/varscan/custom_pon/custom_pon.varscan.vcf.gz",
-		tbi="results/varscan/custom_pon/custom_pon.varscan.vcf.gz.tbi"
-	threads: 1
-	log: 
-		"logs/varscan.merge.ctr.vars.log"
-	shell:
-		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} &&"
-		"tabix -p vcf {output.vcf} "
-
-#---------------------------------------------------------------------------------------------------
-rule varscan_call_snv_on_samples: 
-	input:
-		bam="data/bam/{sample}.dedup.recal.bam",
-		bai="data/bam/{sample}.dedup.recal.bam.bai"
-	output:
-		vcf_snv=temp("results/varscan/{sample}.sample.varscan.snv.vcf.gz"),
-		tbi_snv=temp("results/varscan/{sample}.sample.varscan.snv.vcf.gz.tbi")
-	threads: 1
-	params:
-		varscan="/home/simone/programs/VarScan.v2.3.9.jar",
-		intervals=config["intervals"],
-		ref=config["genome"]
+	conda:
+		"../envs/varscan.yaml"
 	log:
 		"logs/{sample}.varscan.snv.callandNorm.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} |"
-		"java -jar {params.varscan} mpileup2snp --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 |"
+		"varscan mpileup2snp --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 |"
 		"bgzip -c > {output.vcf_snv} &&"
 		"tabix -p vcf {output.vcf_snv}"
 
-rule varscan_call_indel_on_samples: 
+
+rule varscan_call_indel_on_controls: 
 	input:
-		bam="data/bam/{sample}.dedup.recal.bam",
-		bai="data/bam/{sample}.dedup.recal.bam.bai"
+		bam="alignments/{sample}.control.dd.rec.bam",
+		bai="alignments/{sample}.control.dd.rec.bai"
 	output:
-		vcf_indel=temp("results/varscan/{sample}.sample.varscan.indel.vcf.gz"),
-		tbi_indel=temp("results/varscan/{sample}.sample.varscan.indel.vcf.gz.tbi")
+		vcf_indel=temp("results/{sample}_control/{sample}.varscan.indel.vcf.gz"),
+		tbi_indel=temp("results/{sample}_control/{sample}.varscan.indel.vcf.gz.tbi")
+	message:
+		"varscan call indel - control {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.varscan.indel.callandNorm.txt"
 	threads: 1
 	params:
-		varscan="/home/simone/programs/VarScan.v2.3.9.jar",
 		intervals=config["intervals"],
 		ref=config["genome"]
+	conda:
+		"../envs/varscan.yaml"
+	log:
+		"logs/{sample}.varscan.indel.callandNorm.log"
+	shell:
+		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} |"
+		"varscan mpileup2indel --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 |"
+		"bgzip -c > {output.vcf_indel} 2> {log} &&"
+		"tabix -p vcf {output.vcf_indel}"
+		
+rule varscan_call_indel_on_tumors: 
+	input:
+		bam="alignments/{sample}.tumor.dd.rec.bam",
+		bai="alignments/{sample}.tumor.dd.rec.bai"
+	output:
+		vcf_indel=temp("results/{sample}_tumor/{sample}.varscan.indel.vcf.gz"),
+		tbi_indel=temp("results/{sample}_tumor/{sample}.varscan.indel.vcf.gz.tbi")
+	message:
+		"varscan call indel - tumor {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.varscan.indel.callandNorm.txt"
+	threads: 1
+	params:
+		#varscan="/home/simone/programs/VarScan.v2.3.9.jar",
+		intervals=config["intervals"],
+		ref=config["genome"]
+	conda:
+		"../envs/varscan.yaml"
 	log:
 		"logs/{sample}.varscan.indel.callandNorm.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} | "
-		"java -jar {params.varscan} mpileup2indel --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 | "
+		"varscan mpileup2indel --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 | "
 		"bgzip -c > {output.vcf_indel} && "
 		"tabix -p vcf {output.vcf_indel} "
 
-rule varscan_concat_samples: 
+rule varscan_concat_controls: 
 	input:
-		vcf_snv="results/varscan/{sample}.sample.varscan.snv.vcf.gz",
-		vcf_indel="results/varscan/{sample}.sample.varscan.indel.vcf.gz",
-		tbi_snv="results/varscan/{sample}.sample.varscan.snv.vcf.gz.tbi",
-		tbi_indel="results/varscan/{sample}.sample.varscan.indel.vcf.gz.tbi"
+		vcf_snv="results/{sample}_control/{sample}.varscan.snv.vcf.gz",
+		vcf_indel="results/{sample}_control/{sample}.varscan.indel.vcf.gz",
+		tbi_snv="results/{sample}_control/{sample}.varscan.snv.vcf.gz.tbi",
+		tbi_indel="results/{sample}_control/{sample}.varscan.indel.vcf.gz.tbi"
 	output:
-		vcf_concat="results/varscan/{sample}.sample.varscan.concat.vcf.gz"
+		temp("results/{sample}_control/{sample}.varscan.concat.tmp.vcf.gz")
+	message:
+		"concat snv and indel - control {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.varscan.concat.txt"
 	params: 
-		vcf_tmp="results/varscan/{sample}.sample.varscan.tmp.vcf", 
-		ref=config["genome"]
+		config["genome"]
 	threads: 1
+	conda:
+		"../envs/bcftools.yaml"
 	log:
 		"logs/{sample}.varscan.concat.log"
 	shell: 
-		"bcftools concat -a -Ov -o {params.vcf_tmp} {input.vcf_snv} {input.vcf_indel} && "
-		"cat <(bcftools view -h {params.vcf_tmp} | sed -e 's/<ID=FREQ,Number=1,Type=String/<ID=FREQ,Number=A,Type=Float/g') <(bcftools view -H {params.vcf_tmp} | sed 's/%//g' | sed 's/,/./g') | "
-		"bcftools norm -Oz -m - -f {params.ref} -Oz -o {output.vcf_concat} 2> {log} && "
-		"rm {params.vcf_tmp} "
+		"bcftools concat -a -Ov {input.vcf_snv} {input.vcf_indel} | "
+		"bcftools norm -Oz -m - -f {params} -Oz -o {output} 2> {log}"				
 
-rule varscan_reheader_samples:
+
+rule varscan_concat_tumors: 
 	input:
-		"results/varscan/{sample}.sample.varscan.concat.vcf.gz"
+		vcf_snv="results/{sample}_tumor/{sample}.varscan.snv.vcf.gz",
+		vcf_indel="results/{sample}_tumor/{sample}.varscan.indel.vcf.gz",
+		tbi_snv="results/{sample}_tumor/{sample}.varscan.snv.vcf.gz.tbi",
+		tbi_indel="results/{sample}_tumor/{sample}.varscan.indel.vcf.gz.tbi"
 	output:
-		"results/varscan/{sample}.sample.varscan.vcf.gz"
+		temp("results/{sample}_tumor/{sample}.varscan.concat.tmp.vcf.gz")
+	message:
+		"concat snv and indel - tumor {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.varscan.concat.txt"
+	params: 
+		config["genome"]
+	threads: 1
+	conda:
+		"../envs/bcftools.yaml"
+	log:
+		"logs/{sample}.varscan.concat.log"
+	shell: 
+		"bcftools concat -a -Ov {input.vcf_snv} {input.vcf_indel} | "
+		"bcftools norm -Oz -m - -f {params} -Oz -o {output} 2> {log}"
+
+rule varscan_mod_AF_controls:
+	input:
+		"results/{sample}_control/{sample}.varscan.concat.tmp.vcf.gz"
+	output:
+		"results/{sample}_control/{sample}.varscan.concat.vcf.gz"
+	params:
+		"results/{sample}_control/{sample}.annot.tsv.gz"
+	log:
+		"logs/{sample}.varscan_mod_AF_controls.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"""
+		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t[%FREQ]' {input} | awk -F'\t' 'BEGIN {{OFS="\t"}} {{ $5 = $5 / 100; print }}'| bgzip -c > {params} && 
+		tabix -b2 -e2 {params} &&
+		bcftools annotate -x FORMAT/FREQ -a {params} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF  {input} -Oz -o {output}
+		"""
+
+rule varscan_mod_AF_tumors:
+	input:
+		"results/{sample}_tumor/{sample}.varscan.concat.tmp.vcf.gz"
+	output:
+		"results/{sample}_tumor/{sample}.varscan.concat.vcf.gz"
+	params:
+		"results/{sample}_tumor/{sample}.annot.tsv.gz"
+	log:
+		"logs/{sample}.varscan_mod_AF_tumors.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"""
+		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t[%FREQ]' {input} | awk -F'\t' 'BEGIN {{OFS="\t"}} {{ $5 = $5 / 100; print }}'| bgzip -c > {params} && 
+		tabix -b2 -e2 {params} &&
+		bcftools annotate -x FORMAT/FREQ -a {params} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF  {input} -Oz -o {output}
+		"""
+
+rule varscan_reheader_controls:
+	input:
+		"results/{sample}_control/{sample}.varscan.concat.vcf.gz"
+	output:
+		"results/{sample}_control/{sample}.varscan.vcf.gz"
+	message:
+		"reheader - control {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.varscan.rh.txt"
 	threads: 1
 	params:
-		txt="results/varscan/{sample}.rh.txt"
+		txt="results/{sample}_control/{sample}.rh.txt"
+	conda:
+		"../envs/bcftools.yaml"
 	log:
 		"logs/{sample}.varscan.rh.log"
 	shell: 
@@ -181,51 +202,139 @@ rule varscan_reheader_samples:
 		"bcftools reheader -s {params.txt} -o {output} {input} && "
 		"rm {params.txt}"
 
-rule filter_varscan_samples_vars: 
+
+rule varscan_reheader_tumors:
 	input:
-		"results/varscan/{sample}.sample.varscan.vcf.gz"
+		"results/{sample}_tumor/{sample}.varscan.concat.vcf.gz"
 	output:
-		"results/varscan/{sample}.sample.varscan.filt.vcf.gz"
+		"results/{sample}_tumor/{sample}.varscan.vcf.gz"
+	message:
+		"reheader - tumor {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.varscan.rh.txt"
 	threads: 1
 	params:
-		varscan="",
-		ref=config["genome"],
-		chr_to_exclude=config["chr_to_exclude"]
+		txt="results/{sample}_tumor/{sample}.rh.txt"
+	conda:
+		"../envs/bcftools.yaml"
+	log:
+		"logs/{sample}.varscan.rh.log"
+	shell: 
+		"echo {wildcards.sample} > {params.txt} && "
+		"bcftools reheader -s {params.txt} -o {output} {input} && "
+		"rm {params.txt}"
+
+
+rule filter_varscan_controls_vars: 
+	input:
+		"results/{sample}_control/{sample}.varscan.vcf.gz"
+	output:
+		vcf="results/{sample}_control/{sample}.varscan.filt.vcf.gz",
+		tbi="results/{sample}_control/{sample}.varscan.filt.vcf.gz.tbi"
+	message:
+		"filter varscan controls vars - control {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.filter.varscan.txt"
+	threads: 1
+	params:
+		chr_to_exclude=config["chr_to_exclude"],
+		alt=config["filtering_controls"]["alt_depth"],
+		min_depth=config["filtering_controls"]["min_depth"],
+		vaf=config["filtering_controls"]["vaf"],
+	conda:
+		"../envs/bcftools.yaml"
 	log:
 		"logs/{sample}.filter.varscan.log"
 	shell:
-		"bcftools view -Ov -i'FORMAT/DP >= 20 && FORMAT/ADF >= 1 && FORMAT/ADR >= 1 && FREQ >= 3' {input} | "
+		"bcftools view -Ov -i 'FORMAT/DP >= {params.min_depth} & FORMAT/AD >= {params.alt} & FORMAT/AF >= {params.vaf}' {input} |"
+		"grep -v -f {params.chr_to_exclude} |"
+		"bcftools sort -Oz -o {output.vcf} 2> {log} &&"
+		"tabix -f -p vcf {output.vcf}"
+
+rule filter_varscan_tumors_vars: 
+	input:
+		"results/{sample}_tumor/{sample}.varscan.vcf.gz"
+	output:
+		"results/{sample}_tumor/{sample}.varscan.filt.vcf.gz"
+	message:
+		"filter varscan tumor vars - tumor {wildcards.sample}"
+	benchmark:
+		"benchmarks/{sample}.filter.varscan.txt"
+	threads: 1
+	params:
+		chr_to_exclude=config["chr_to_exclude"],
+		alt=config["filtering_tumors"]["alt_depth"],
+		min_depth=config["filtering_tumors"]["min_depth"],
+		vaf=config["filtering_tumors"]["vaf"],
+	conda:
+		"../envs/bcftools.yaml"
+	log:
+		"logs/{sample}.filter.varscan.log"
+	shell:
+		"bcftools view -Ov -i'FORMAT/DP >= {params.min_depth} & FORMAT/AD >= {params.alt} & FORMAT/AF >= {params.vaf}' {input} | "
 		"grep -v -f {params.chr_to_exclude} | "
 		"bcftools sort -Oz -o {output} && "
 		"tabix -f -p vcf {output}"
 
+rule merge_varscan_controls_variants:
+	input:
+		vcf=expand(f"results/{{sample}}_control/{{sample}}.varscan.filt.vcf.gz", sample=config['controls'].values()),
+		tbi=expand(f"results/{{sample}}_control/{{sample}}.varscan.filt.vcf.gz.tbi", sample=config['controls'].values())
+	output:
+		vcf="results/custom_pon.varscan.vcf.gz",
+		tbi="results/custom_pon.varscan.vcf.gz.tbi"
+	message:
+		"merge varscan controls vars"
+	benchmark:
+		"benchmarks/varscan.merge.ctr.vars.txt"
+	threads: 1
+	conda:
+		"../envs/bcftools.yaml"
+	log: 
+		"logs/varscan.merge.ctr.vars.log"
+	shell:
+		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} &&"
+		"tabix -p vcf {output.vcf} "
+
+
 rule remove_varscan_controls_vars: 
 	input:
-		vcf="results/varscan/{sample}.sample.varscan.filt.vcf.gz",
-		custom_pon="results/varscan/custom_pon/custom_pon.varscan.vcf.gz",
-		tbi="results/varscan/custom_pon/custom_pon.varscan.vcf.gz.tbi"
+		vcf="results/{sample}_tumor/{sample}.varscan.filt.vcf.gz",
+		custom_pon="results/custom_pon.varscan.vcf.gz",
+		tbi="results/custom_pon.varscan.vcf.gz.tbi"
 	output:
-		vcf="results/varscan/{sample}.sample.varscan.filtOnCtr.vcf.gz",
-		tbi="results/varscan/{sample}.sample.varscan.filtOnCtr.vcf.gz.tbi"
+		vcf="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vcf.gz.tbi"
+	message:
+		"remove varscan controls vars"
+	benchmark:
+		"benchmarks/{sample}.varscan.rh.txt"
 	threads: 1
-	params:
-		gatk_pon=config["gatk_pon"]
+	conda:
+		"../envs/bcftools.yaml"
 	log: 
 		"logs/{sample}.filtOnCtr.vars.log"
 	shell:
-		"bcftools isec -w1 -Oz -c none -n~100 -o {output.vcf} {input.vcf} {input.custom_pon} {params.gatk_pon} 2> {log} && "
+		"bcftools isec -w1 -Oz -c none -n~10 -o {output.vcf} {input.vcf} {input.custom_pon} 2> {log} && "
 		"tabix -p vcf {output.vcf}"
 
-rule merge_varscan_samples_variants: ## difference between single curly and doucle curly brackets ##
-    input:
-        vcf=expand("results/varscan/{sample}.sample.varscan.filtOnCtr.vcf.gz", sample=config['samples'].values()),
-        tbi=expand("results/varscan/{sample}.sample.varscan.filtOnCtr.vcf.gz.tbi", sample=config['samples'].values())
-    output:
-        vcf="results/varscan/multisample.varscan.vcf.gz",
-        tbi="results/varscan/multisample.varscan.vcf.gz.tbi"
-    threads: 1
-    log: 
-        "logs/multisample.varscan.log"
-    shell:
-        "bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} &&"
-        "tabix -p vcf {output.vcf}"
+
+rule merge_varscan_tumors_variants: ## difference between single curly and doucle curly brackets ##
+	input:
+		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz", sample=config['tumors'].values()),
+		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz.tbi", sample=config['tumors'].values())
+	output:
+		vcf="results/multisample.varscan.vcf.gz",
+		tbi="results/multisample.varscan.vcf.gz.tbi"
+	message:
+		"merge varscan tumors vars"
+	benchmark:
+		"benchmarks/multisample.varscan.txt"
+	threads: 1
+	conda:
+		"../envs/bcftools.yaml"
+	log: 
+		"logs/multisample.varscan.log"
+	shell:
+		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} &&"
+		"tabix -p vcf {output.vcf}"

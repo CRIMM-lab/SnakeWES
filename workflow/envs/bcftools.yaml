@@ -1,5 +1,6 @@
 channels:
- - bioconda
- - conda-forge
+  - conda-forge
+  - bioconda
+  - defaults
 dependencies:
- - bcftools=1.19
+  - bcftools=1.19

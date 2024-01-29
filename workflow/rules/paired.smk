@@ -151,8 +151,8 @@ rule VarscanBgzipIndex:
 	output:
 		snpbg=temp("results/{sample}.varscan.paired.snp.vcf.gz"),
 		indelbg=temp("results/{sample}.varscan.paired.indel.vcf.gz"),
-		snpix=temp("results/{sample}.varscan.paired.snp.vcf.gz.tbi"),
-		indelix=temp("results/{sample}.varscan.paired.indel.vcf.gz.tbi")
+		snpix="results/{sample}.varscan.paired.snp.vcf.gz.tbi",
+		indelix="results/{sample}.varscan.paired.indel.vcf.gz.tbi"
 	log:
 		"logs/{sample}.VarscanBgzipIndex.log"
 	threads:1
@@ -161,7 +161,7 @@ rule VarscanBgzipIndex:
 
 rule MergeVarscanOutput:
     input:
-        calls=["results/{sample}.varscan.paired.snp.vcf.gz", "results/{sample}.varscan.paired.indel.vcf.gz"],
+        calls=["results/{sample}.varscan.paired.snp.vcf.gz", "results/{sample}.varscan.paired.indel.vcf.gz"]
     output:
         temp("results/{sample}.varscan.paired.tmp.vcf.gz")
     log:
@@ -192,3 +192,44 @@ rule ReheaderVarscanOutput:
 		"echo {wildcards.sample}_tumor >> {params.txt} && "
 		"bcftools reheader -s {params.txt} -o {output} {input} && "
 		"rm {params.txt}"
+
+
+#######################################################################################   VEP   #######################################################################################
+rule get_vep_cache:
+    output:
+        directory("resources/vep/cache"),
+    params:
+        species="homo_sapiens_merged",
+        build="GRCh38",
+        release="110",
+    log:
+        "logs/vep_cache.log",
+    cache: "omit-software"  # save space and time with between workflow caching (see docs)
+    wrapper:
+        "v3.3.5/bio/vep/cache"
+
+rule download_vep_plugins:
+    output:
+        directory("resources/vep/plugins")
+    params:
+        release=100
+    wrapper:
+        "v3.3.5/bio/vep/plugins"
+
+
+rule VepMutectPaired:
+	input:
+		"results/{sample}.mutect2.paired.filtered.vcf.gz"
+	output:
+		calls="results/{sample}.mutect2.paired.filtered.vep.vcf",
+		html="results/{sample}.mutect2.paired.filtered.vep.html"
+	threads: 10
+	log:
+		"logs/{sample}.VepMutectPaired.log"
+	conda:
+		"../envs/vep.yaml"
+	params:
+		ref=config["genome"],
+		#vep="/home/alessio/programs/ensembl-vep/vep"
+	shell:
+		"vep -i {input} -o {output.calls} --fork {threads} --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --polyphen b --sift b --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN"

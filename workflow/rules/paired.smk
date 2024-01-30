@@ -195,28 +195,6 @@ rule ReheaderVarscanOutput:
 
 
 #######################################################################################   VEP   #######################################################################################
-rule get_vep_cache:
-    output:
-        directory("resources/vep/cache"),
-    params:
-        species="homo_sapiens_merged",
-        build="GRCh38",
-        release="110",
-    log:
-        "logs/vep_cache.log",
-    cache: "omit-software"  # save space and time with between workflow caching (see docs)
-    wrapper:
-        "v3.3.5/bio/vep/cache"
-
-rule download_vep_plugins:
-    output:
-        directory("resources/vep/plugins")
-    params:
-        release=100
-    wrapper:
-        "v3.3.5/bio/vep/plugins"
-
-
 rule VepMutectPaired:
 	input:
 		"results/{sample}.mutect2.paired.filtered.vcf.gz"
@@ -232,4 +210,21 @@ rule VepMutectPaired:
 		ref=config["genome"],
 		#vep="/home/alessio/programs/ensembl-vep/vep"
 	shell:
-		"vep -i {input} -o {output.calls} --fork {threads} --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --polyphen b --sift b --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN"
+		"vep -i {input} -o {output.calls} --fork {threads} --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache resources/vep/cache/ --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --polyphen b --sift b --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN"
+
+rule VepVarscanPaired:
+	input:
+		"results/{sample}.varscan.paired.vcf.gz"
+	output:
+		calls="results/{sample}.varscan.paired.vep.vcf",
+		html="results/{sample}.varscan.paired.vep.html"
+	threads: 10
+	log:
+		"logs/{sample}.VepVarscanPaired.log"
+	conda:
+		"../envs/vep.yaml"
+	params:
+		ref=config["genome"],
+		#vep="/home/alessio/programs/ensembl-vep/vep"
+	shell:
+		"vep -i {input} -o {output.calls} --fork {threads} --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache resources/vep/cache/ --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --polyphen b --sift b --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN"

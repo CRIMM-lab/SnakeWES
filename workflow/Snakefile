@@ -64,7 +64,13 @@ rule paired:
 		expand(f"results/{{sample}}.varscan.paired.snp.vcf.gz.tbi",sample=config["tumors"].values()),
 		expand(f"results/{{sample}}.varscan.paired.indel.vcf.gz.tbi",sample=config["tumors"].values()),
 		expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["tumors"].values()),
-		expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf", sample=config["tumors"].values()),
-		expand(f"results/{{sample}}.varscan.paired.vep.vcf", sample=config["tumors"].values())
+		expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["tumors"].values()),
+		expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["tumors"].values()),
+		f"results/multisample.mutect2.paired.vep.vcf.gz",
+		f"results/multisample.varscan.paired.vep.vcf.gz",
+		f"results/multisample.varscan.paired.vep.formatted.vcf.gz",
+		f"results/multisample.mutect2.paired.tmp.tsv",
+		f"results/multisample.varscan.paired.tmp.tsv"
+
 
 

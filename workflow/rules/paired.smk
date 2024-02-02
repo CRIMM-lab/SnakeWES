@@ -199,7 +199,8 @@ rule VepMutectPaired:
 	input:
 		"results/{sample}.mutect2.paired.filtered.vcf.gz"
 	output:
-		calls="results/{sample}.mutect2.paired.filtered.vep.vcf",
+		calls="results/{sample}.mutect2.paired.filtered.vep.vcf.gz",
+		tbi="results/{sample}.mutect2.paired.filtered.vep.vcf.gz.tbi",
 		html="results/{sample}.mutect2.paired.filtered.vep.html"
 	threads: 10
 	log:
@@ -210,13 +211,14 @@ rule VepMutectPaired:
 		ref=config["genome"],
 		#vep="/home/alessio/programs/ensembl-vep/vep"
 	shell:
-		"vep -i {input} -o {output.calls} --fork {threads} --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache resources/vep/cache/ --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --polyphen b --sift b --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN"
+		"vep -i {input} -o {output.calls} --fork {threads} --compress_output bgzip --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache resources/vep/cache/ --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN 2>{log} && tabix {output.calls} 2>>{log}"
 
 rule VepVarscanPaired:
 	input:
 		"results/{sample}.varscan.paired.vcf.gz"
 	output:
-		calls="results/{sample}.varscan.paired.vep.vcf",
+		calls="results/{sample}.varscan.paired.vep.vcf.gz",
+		tbi="results/{sample}.varscan.paired.vep.vcf.gz.tbi",
 		html="results/{sample}.varscan.paired.vep.html"
 	threads: 10
 	log:
@@ -227,4 +229,83 @@ rule VepVarscanPaired:
 		ref=config["genome"],
 		#vep="/home/alessio/programs/ensembl-vep/vep"
 	shell:
-		"vep -i {input} -o {output.calls} --fork {threads} --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache resources/vep/cache/ --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --polyphen b --sift b --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN"
+		"vep -i {input} -o {output.calls} --fork {threads} --compress_output bgzip --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache resources/vep/cache/ --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN 2>{log} && tabix {output.calls} 2>>{log}"
+
+#######################################################################################   Merge   #######################################################################################
+
+rule MultisamplePairedMutect2:
+	input:
+		expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz", sample=config["tumors"].values())
+	output:
+		"results/multisample.mutect2.paired.vep.vcf.gz"
+	threads: 1
+	log:
+		"logs/MultisamplePairedMutect2.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"bcftools merge -m none -O z -o {output} {input} 2>{log}"
+
+rule MultisamplePairedVarscan:
+	input:
+		expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz", sample=config["tumors"].values())
+	output:
+		"results/multisample.varscan.paired.vep.vcf.gz"
+	threads: 1
+	log:
+		"logs/MultisamplePairedVarscan.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"bcftools merge -m none -O z -o {output} {input} 2>{log}"
+
+rule FormatMultisamplePairedVarscan:
+	input:
+		"results/multisample.varscan.paired.vep.vcf.gz"
+	output:
+		"results/multisample.varscan.paired.vep.formatted.vcf.gz"
+	threads: 1
+	log:
+		"logs/FormatMultisamplePairedVarscan.log"
+	conda:
+		"../envs/bcftools.yaml"
+	params:
+		tumor="results/tumor.sample.txt"
+	shell:
+		"""
+		bcftools query -l {input} |grep "tumor" > {params.tumor} 2>{log} && bcftools view -S {params.tumor} -O z -o {output} {input} 2>>{log}
+		"""
+
+rule ParseAnnotationVepMutect2:
+	input:
+		"results/multisample.mutect2.paired.vep.vcf.gz"
+	output:
+		"results/multisample.mutect2.paired.tmp.tsv"
+	threads: 1
+	log:
+		"logs/ParseAnnotationVepMutect2.log"
+	conda:
+		"../envs/bcftools.yaml"
+	params:
+		""
+	shell:
+		"""
+		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%GT\t%RD\t%AD\t%FREQ]\n" -d -A tab > {output} 2>{log}
+		"""
+
+rule ParseAnnotationVepVarScan:
+	input:
+		"results/multisample.varscan.paired.vep.formatted.vcf.gz"
+	output:
+		f"results/multisample.varscan.paired.tmp.tsv"
+	threads: 1
+	log:
+		"logs/ParseAnnotationVepVarScan.log"
+	conda:
+		"../envs/bcftools.yaml"
+	params:
+		""
+	shell:
+		"""
+		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%GT\t%RD\t%AD\t%FREQ]\n" -d -A tab > {output} 2>{log}
+		"""

@@ -10,27 +10,32 @@ gnomAD: resources/af-only-gnomad.hg38.norm.vcf.gz
 
 gatk_pon: resources/1000g_pon.hg38.norm.vcf.gz
 
-  
-tumors:
+dbNSFP: resources/dbNSFP4.5a_grch38.gz
 
-  tumor1: A0030
-  tumor2: A0340
-  tumor3: A0734
-  tumor4: A0789
-  tumor5: A0934
+clinvar: resources/clinvar_20231217.vcf.gz
+
+vepcache: resources/vep/cache/
+  
+samples:
+
+  sample1: CD37847
+#  sample2: A0340
+#  sample3: A0734
+#  sample4: A0789
+#  sample5: A0934
 
 strand:
   
   strandR1: R1
   strandR2: R2
 
-controls:
+#controls:
   
-  control1: CD37493
-  control2: CD31983
-  control3: CD37846
-  control4: CD39887
-  control5: CD3A0066
+#  control1: CD37493
+#  control2: CD31983
+#  control3: CD37846
+#  control4: CD39887
+#  control5: CD3A0066
 
 paired:
 

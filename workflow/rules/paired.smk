@@ -1,3 +1,38 @@
+rule GetPileupSummariesTumor:
+	input:
+		bam="alignments/{sample}.tumor.dd.rec.bam",
+		intervals=config["intervals"],
+		variants=config["gnomAD"]
+	output:
+		"data/{sample}.tumor.pileup.table"
+	threads: 1
+	resources:
+		mem_mb=4096,
+	params:
+		extra="",
+	log:
+		"logs/{sample}.GetPileupSummariesTumor.log",
+	wrapper:
+		"v3.3.3/bio/gatk/getpileupsummaries"
+
+rule CalculateContaminationTumor:
+	input:
+		"data/{sample}.tumor.pileup.table"
+	output:
+		contamination="data/{sample}.tumor.contamination.table",
+		segmentation="data/{sample}.tumor.tumorseg.txt"
+	threads: 1
+	log:
+		"logs/{sample}.CalculateContaminationTumor.log",
+	conda:
+		"../envs/gatk4.yaml"
+	params:
+		java_opts="-XX:ParallelGCThreads=" + str(config["threads"]),
+		mem_mb="-Xmx4G"
+		#extra="--tumor-segmentation data/{wildcards.sample}.tumseg.txt"
+	shell:
+		"gatk --java-options {params.mem_mb} CalculateContamination -I {input} -O {output.contamination} --tumor-segmentation {output.segmentation} > {log} 2>&1"
+
 rule GetPileupSummariesGermline:
 	input:
 		bam="alignments/{sample}.germline.dd.rec.bam",
@@ -209,9 +244,11 @@ rule VepMutectPaired:
 		"../envs/vep.yaml"
 	params:
 		ref=config["genome"],
-		#vep="/home/alessio/programs/ensembl-vep/vep"
+		clinvar=config["clinvar"],
+		dbNSFP=config["dbNSFP"],
+		cache=config["vepcache"]
 	shell:
-		"vep -i {input} -o {output.calls} --fork {threads} --compress_output bgzip --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache resources/vep/cache/ --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN 2>{log} && tabix {output.calls} 2>>{log}"
+		"vep -i {input} -o {output.calls} --fork {threads} --compress_output bgzip --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache {params.cache} --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --cache --pick --pick_allele --vcf --plugin dbNSFP,{params.dbNSFP},SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom {params.clinvar},ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN 2>{log} && tabix {output.calls} 2>>{log}"
 
 rule VepVarscanPaired:
 	input:
@@ -227,15 +264,17 @@ rule VepVarscanPaired:
 		"../envs/vep.yaml"
 	params:
 		ref=config["genome"],
-		#vep="/home/alessio/programs/ensembl-vep/vep"
+		clinvar=config["clinvar"],
+		dbNSFP=config["dbNSFP"],
+		cache=config["vepcache"]
 	shell:
-		"vep -i {input} -o {output.calls} --fork {threads} --compress_output bgzip --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache resources/vep/cache/ --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --cache --pick --pick_allele --vcf --plugin dbNSFP,/home/simone/mnt/qnap/dbNSFP/4.5/dbNSFP4.5a_grch38.gz,SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom /home/simone/mnt/part1/resources/hg38/clinvar_20231217.vcf.gz,ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN 2>{log} && tabix {output.calls} 2>>{log}"
+		"vep -i {input} -o {output.calls} --fork {threads} --compress_output bgzip --everything --offline --species homo_sapiens --stats_file {output.html} --assembly GRCh38 --cache --dir_cache {params.cache} --cache_version 110 --merged --fasta {params.ref} --format vcf --symbol --no_intergenic --merged --cache --pick --pick_allele --vcf --plugin dbNSFP,{params.dbNSFP},SIFT_converted_rankscore,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,FATHMM_converted_rankscore,FATHMM_pred --custom {params.clinvar},ClinVar,vcf,exact,0,CLNSIG,CLNREVSTAT,CLNDN 2>{log} && tabix {output.calls} 2>>{log}"
 
 #######################################################################################   Merge   #######################################################################################
 
 rule MultisamplePairedMutect2:
 	input:
-		expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz", sample=config["tumors"].values())
+		expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz", sample=config["samples"].values())
 	output:
 		"results/multisample.mutect2.paired.vep.vcf.gz"
 	threads: 1
@@ -248,7 +287,7 @@ rule MultisamplePairedMutect2:
 
 rule MultisamplePairedVarscan:
 	input:
-		expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz", sample=config["tumors"].values())
+		expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz", sample=config["samples"].values())
 	output:
 		"results/multisample.varscan.paired.vep.vcf.gz"
 	threads: 1

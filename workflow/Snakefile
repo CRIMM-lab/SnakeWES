@@ -5,76 +5,86 @@ include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/alfred.smk"
 include: "rules/vep.smk"
-include: "rules/paired.smk"
-include: "rules/mutect2.smk"
+#include: "rules/paired.smk"
+#include: "rules/mutect2.smk"
 #include: "rules/depth.smk"
-include: "rules/freebayes.smk"
-include: "rules/varscan.smk"
-include: "rules/bcftools.smk"
-include: "rules/pureCN.smk"
+#include: "rules/freebayes.smk"
+#include: "rules/varscan.smk"
+#include: "rules/bcftools.smk"
+#include: "rules/pureCN.smk"
 
-rule fastqc:
-	input:
-		expand(f"qc/{{sample}}_tumor_{{strand}}_fastqc.html", sample=config["tumors"].values(), strand=config["strand"].values()),
-		expand(f"qc/{{sample}}_control_{{strand}}_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
-		expand(f"qc/{{sample}}_tumor_{{strand}}_tr_fastqc.html", sample=config["tumors"].values(), strand=config["strand"].values()),
-		expand(f"qc/{{sample}}_control_{{strand}}_tr_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
+if "controls" in config:
 
-rule align:
-	input:
-		expand(f"alignments/{{sample}}.tumor.dd.rec.bam", sample=config["tumors"].values()),
-		expand(f"alignments/{{sample}}.control.dd.rec.bam", sample=config["controls"].values())
+	include: "rules/mutect2.smk"
+	#include: "rules/depth.smk"
+	include: "rules/freebayes.smk"
+	include: "rules/varscan.smk"
+	include: "rules/bcftools.smk"
+	include: "rules/pureCN.smk"
 
-rule bamqc:
-	input:
-		expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["tumors"].values()),
-		expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values())
+	rule fastqc:
+		input:
+			expand(f"qc/{{sample}}_tumor_{{strand}}_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_control_{{strand}}_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_tumor_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_control_{{strand}}_tr_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
 
-rule mutect2:
-	input:
-		expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filt.vcf.gz", sample=config["tumors"].values()),
-		expand(f"results/{{sample}}_control/{{sample}}.mutect2.filt.vcf.gz", sample=config["controls"].values())
+	rule align:
+		input:
+			expand(f"alignments/{{sample}}.tumor.dd.rec.bam", sample=config["samples"].values()),
+			expand(f"alignments/{{sample}}.control.dd.rec.bam", sample=config["controls"].values())
 
-rule freebayes:
-	input:
-		expand(f"results/{{sample}}_tumor/{{sample}}.freebayes.filtOnCtr.vcf.gz", sample=config["tumors"].values()),
-		expand(f"results/{{sample}}_control/{{sample}}.freebayes.filt.vcf.gz", sample=config["controls"].values()),
-		f"results/multisample.freebayes.vcf.gz"
-		#expand(f"results/freebayes/{{sample}}.freebayes.filtOnCtr.vep.tsv", sample={**config["samples"],**config["controls"]}.values())
+	rule bamqc:
+		input:
+			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
+			expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values())
 
-rule varscan: 
-	input:
-		expand(f"results/{{sample}}_control/{{sample}}.varscan.filt.vcf.gz", sample=config["controls"].values()),
-		expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz", sample=config["tumors"].values()),
-		f"results/multisample.varscan.vcf.gz"
+	rule mutect2:
+		input:
+			expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filt.vcf.gz", sample=config["samples"].values()),
+			expand(f"results/{{sample}}_control/{{sample}}.mutect2.filt.vcf.gz", sample=config["controls"].values())
 
-rule bcftools:
-	input:
-		expand(f"results/{{sample}}_control/{{sample}}.bcftools.filt.vcf.gz", sample=config["controls"].values()),
-		expand(f"results/{{sample}}_tumor/{{sample}}.bcftools.filtOnCtr.vcf.gz", sample=config["tumors"].values()),
-		f"results/multisample.bcftools.vcf.gz"
+	rule freebayes:
+		input:
+			expand(f"results/{{sample}}_tumor/{{sample}}.freebayes.filtOnCtr.vcf.gz", sample=config["samples"].values()),
+			expand(f"results/{{sample}}_control/{{sample}}.freebayes.filt.vcf.gz", sample=config["controls"].values()),
+			f"results/multisample.freebayes.vcf.gz"
+			#expand(f"results/freebayes/{{sample}}.freebayes.filtOnCtr.vep.tsv", sample={**config["samples"],**config["controls"]}.values())
 
+	rule varscan: 
+		input:
+			expand(f"results/{{sample}}_control/{{sample}}.varscan.filt.vcf.gz", sample=config["controls"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz", sample=config["samples"].values()),
+			f"results/multisample.varscan.vcf.gz"
 
-rule paired:
-	input:
-		expand(f"qc/{{sample}}_{{type}}_{{strand}}_fastqc.html", sample=config["tumors"].values(), type=config["paired"].values(), strand=config["strand"].values()),
-		expand(f"qc/{{sample}}_{{type}}_{{strand}}_tr_fastqc.html", sample=config["tumors"].values(), type=config["paired"].values(), strand=config["strand"].values()),
-		#expand(f"alignments/{{sample}}.{{type}}.dd.rec.bam", sample=config["tumors"].values(),type=config["paired"].values()),
-		expand(f"qc/{{sample}}.{{type}}.qc.tsv.gz.pdf", sample=config["tumors"].values(),type=config["paired"].values()),
-		#expand(f"results/{{sample}}.mutect2.paired.filtered.vcf.gz",sample=config["tumors"].values()),
-		expand(f"results/{{sample}}.varscan.paired.snp.vcf.gz.tbi",sample=config["tumors"].values()),
-		expand(f"results/{{sample}}.varscan.paired.indel.vcf.gz.tbi",sample=config["tumors"].values()),
-		expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["tumors"].values()),
-		expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["tumors"].values()),
-		expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["tumors"].values()),
-		f"results/multisample.mutect2.paired.vep.vcf.gz",
-		f"results/multisample.varscan.paired.vep.vcf.gz",
-		f"results/multisample.varscan.paired.vep.formatted.vcf.gz",
-		f"results/multisample.mutect2.paired.tmp.tsv",
-		f"results/multisample.varscan.paired.tmp.tsv"
+	rule bcftools:
+		input:
+			expand(f"results/{{sample}}_control/{{sample}}.bcftools.filt.vcf.gz", sample=config["controls"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.bcftools.filtOnCtr.vcf.gz", sample=config["samples"].values()),
+			f"results/multisample.bcftools.vcf.gz"
 
+	rule pureCN:
+		input:
+			expand(f"alignments/{{sample}}.tumor.coveragePureCN.loess.txt", sample=config["tumors"].values()),
+			expand(f"alignments/{{sample}}.control.coveragePureCN.loess.txt", sample=config["controls"].values())
 
-rule pureCN:
-	input:
-		expand(f"alignments/{{sample}}.tumor.coveragePureCN.loess.txt", sample=config["tumors"].values()),
-		expand(f"alignments/{{sample}}.control.coveragePureCN.loess.txt", sample=config["controls"].values())
+else:
+
+	include: "rules/paired.smk"
+
+	rule paired:
+		input:
+			expand(f"qc/{{sample}}_{{type}}_{{strand}}_fastqc.html", sample=config["samples"].values(), type=config["paired"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_{{type}}_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), type=config["paired"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}.{{type}}.qc.tsv.gz.pdf", sample=config["samples"].values(),type=config["paired"].values()),
+			expand(f"results/{{sample}}.varscan.paired.snp.vcf.gz.tbi",sample=config["samples"].values()),
+			expand(f"results/{{sample}}.varscan.paired.indel.vcf.gz.tbi",sample=config["samples"].values()),
+			expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["samples"].values()),
+			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["samples"].values()),
+			expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values()),
+			f"results/multisample.mutect2.paired.vep.vcf.gz",
+			f"results/multisample.varscan.paired.vep.vcf.gz",
+			f"results/multisample.varscan.paired.vep.formatted.vcf.gz",
+			f"results/multisample.mutect2.paired.tmp.tsv",
+			f"results/multisample.varscan.paired.tmp.tsv"
+

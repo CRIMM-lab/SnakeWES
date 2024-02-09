@@ -162,8 +162,8 @@ rule bcftools_remove_controls:
 
 rule merge_bcftools_samples_variants: 
 	input:
-		vcf=expand("results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vcf.gz", sample=config['tumors'].values()),
-		tbi=expand("results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vcf.gz.tbi", sample=config['tumors'].values())
+		vcf=expand("results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vcf.gz", sample=config['samples'].values()),
+		tbi=expand("results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vcf.gz.tbi", sample=config['samples'].values())
 	output:
 		vcf="results/multisample.bcftools.vcf.gz",
 		tbi="results/multisample.bcftools.vcf.gz.tbi"

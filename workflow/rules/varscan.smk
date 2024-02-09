@@ -321,8 +321,8 @@ rule remove_varscan_controls_vars:
 
 rule merge_varscan_tumors_variants: ## difference between single curly and doucle curly brackets ##
 	input:
-		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz", sample=config['tumors'].values()),
-		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz.tbi", sample=config['tumors'].values())
+		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz", sample=config['samples'].values()),
+		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz.tbi", sample=config['samples'].values())
 	output:
 		vcf="results/multisample.varscan.vcf.gz",
 		tbi="results/multisample.varscan.vcf.gz.tbi"

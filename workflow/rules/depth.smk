@@ -11,6 +11,3 @@ rule mosdepth:
                 "logs/{sample}.mosdepth.log"
         shell:
         	"{params.mosdepth} --by {params.intervals} {wildcards.sample} -t {threads} {input} 2> {log}"
-
-rule plot_cov:
-        input:

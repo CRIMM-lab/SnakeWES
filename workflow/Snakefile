@@ -5,13 +5,6 @@ include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/alfred.smk"
 include: "rules/vep.smk"
-#include: "rules/paired.smk"
-#include: "rules/mutect2.smk"
-#include: "rules/depth.smk"
-#include: "rules/freebayes.smk"
-#include: "rules/varscan.smk"
-#include: "rules/bcftools.smk"
-#include: "rules/pureCN.smk"
 
 if "controls" in config:
 
@@ -65,12 +58,13 @@ if "controls" in config:
 
 	rule pureCN:
 		input:
-			expand(f"alignments/{{sample}}.tumor.coveragePureCN.loess.txt", sample=config["tumors"].values()),
+			expand(f"alignments/{{sample}}.tumor.coveragePureCN.loess.txt", sample=config["samples"].values()),
 			expand(f"alignments/{{sample}}.control.coveragePureCN.loess.txt", sample=config["controls"].values())
 
 else:
 
 	include: "rules/paired.smk"
+	include: "rules/paired.OneSample.smk"
 
 	rule paired:
 		input:
@@ -87,4 +81,17 @@ else:
 			f"results/multisample.varscan.paired.vep.formatted.vcf.gz",
 			f"results/multisample.mutect2.paired.tmp.tsv",
 			f"results/multisample.varscan.paired.tmp.tsv"
+
+	rule pairedOneSample:
+		input:
+			expand(f"qc/{{sample}}_{{type}}_{{strand}}_fastqc.html", sample=config["samples"].values(), type=config["paired"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_{{type}}_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), type=config["paired"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}.{{type}}.qc.tsv.gz.pdf", sample=config["samples"].values(),type=config["paired"].values()),
+			expand(f"results/{{sample}}.varscan.paired.snp.vcf.gz.tbi",sample=config["samples"].values()),
+			expand(f"results/{{sample}}.varscan.paired.indel.vcf.gz.tbi",sample=config["samples"].values()),
+			expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["samples"].values()),
+			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["samples"].values()),
+			expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values()),
+			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.tmp.tsv", sample=config["samples"].values()),
+			expand(f"results/{{sample}}.varscan.paired.vep.tmp.tsv", sample=config["samples"].values())
 

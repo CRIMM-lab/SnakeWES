@@ -175,7 +175,7 @@ rule VarscanSomatic:
 		"../envs/varscan.yaml"
 	message:
 		"Calling somatic variants {wildcards.sample}"
-	threads:1
+	threads:10
 	shell:
 		"varscan somatic {input.normal_pileup} {input.tumor_pileup} --output-vcf --min-avg-qual 15 --p-value 0.05 --min-var-freq 0.03  --output-snp {output.snp} --output-indel {output.indel} 2>{log}"
 
@@ -336,7 +336,7 @@ rule ParseAnnotationVepVarScan:
 	input:
 		"results/multisample.varscan.paired.vep.formatted.vcf.gz"
 	output:
-		f"results/multisample.varscan.paired.tmp.tsv"
+		"results/multisample.varscan.paired.tmp.tsv"
 	threads: 1
 	log:
 		"logs/ParseAnnotationVepVarScan.log"

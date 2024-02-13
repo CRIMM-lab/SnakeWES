@@ -110,6 +110,20 @@ rule FilterMutectCallsPaired:
 	wrapper:
 		"v3.3.3/bio/gatk/filtermutectcalls"
 
+rule NormMutect2Paired:
+	input:
+		"results/{sample}.mutect2.paired.filtered.vcf.gz"
+	output:
+		"results/{sample}.mutect2.paired.filtered.norm.vcf.gz"
+	log:
+		"logs/{sample}.NormMutect2Paired.log",
+	conda:
+		"../envs/bcftools.yaml"
+	params:
+		genome=config["genome"]
+	shell:
+		"bcftools view -f PASS {input} |bcftools norm -m - -f {params.genome} -O z -o {output} - 2>{log}"
+
 #######################################################################################   VARSCAN   #######################################################################################
 
 rule GermlineMpileup:
@@ -198,7 +212,7 @@ rule MergeVarscanOutput:
     input:
         calls=["results/{sample}.varscan.paired.snp.vcf.gz", "results/{sample}.varscan.paired.indel.vcf.gz"]
     output:
-        temp("results/{sample}.varscan.paired.tmp.vcf.gz")
+        "results/{sample}.varscan.paired.tmp.vcf.gz"
     log:
         "logs/{sample}.MergeVarscanOutput.log",
     params:
@@ -210,29 +224,25 @@ rule MergeVarscanOutput:
     wrapper:
         "v3.3.3/bio/bcftools/concat"
 
-rule ReheaderVarscanOutput:
+rule NormVarscanPaired:
 	input:
-		"results/{sample}.varscan.paired.tmp.vcf.gz"
-	output:
 		"results/{sample}.varscan.paired.vcf.gz"
-	threads: 1
-	params:
-		txt="data/{sample}.rh.txt"
+	output:
+		"results/{sample}.varscan.paired.norm.vcf.gz"
 	log:
-		"logs/{sample}.varscan.rh.log"
+		"logs/{sample}.NormVarscanPaired.log",
 	conda:
 		"../envs/bcftools.yaml"
-	shell: 
-		"echo {wildcards.sample}_germline > {params.txt} && "
-		"echo {wildcards.sample}_tumor >> {params.txt} && "
-		"bcftools reheader -s {params.txt} -o {output} {input} && "
-		"rm {params.txt}"
+	params:
+		genome=config["genome"]
+	shell:
+		"bcftools view -f PASS {input} |bcftools norm -m - -f {params.genome} -O z -o {output} - 2>{log}"
 
 
 #######################################################################################   VEP   #######################################################################################
 rule VepMutectPaired:
 	input:
-		"results/{sample}.mutect2.paired.filtered.vcf.gz"
+		"results/{sample}.mutect2.paired.filtered.norm.vcf.gz"
 	output:
 		calls="results/{sample}.mutect2.paired.filtered.vep.vcf.gz",
 		tbi="results/{sample}.mutect2.paired.filtered.vep.vcf.gz.tbi",
@@ -252,7 +262,7 @@ rule VepMutectPaired:
 
 rule VepVarscanPaired:
 	input:
-		"results/{sample}.varscan.paired.vcf.gz"
+		"results/{sample}.varscan.paired.norm.vcf.gz"
 	output:
 		calls="results/{sample}.varscan.paired.vep.vcf.gz",
 		tbi="results/{sample}.varscan.paired.vep.vcf.gz.tbi",

@@ -15,6 +15,6 @@ rule download_vep_plugins:
     output:
         directory("resources/vep/plugins")
     params:
-        release=100
+        release=110
     wrapper:
         "v3.3.5/bio/vep/plugins"

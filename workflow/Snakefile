@@ -92,6 +92,6 @@ else:
 			expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["samples"].values()),
 			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["samples"].values()),
 			expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values()),
-			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.tmp.tsv", sample=config["samples"].values()),
-			expand(f"results/{{sample}}.varscan.paired.vep.tmp.tsv", sample=config["samples"].values())
+			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.tsv", sample=config["samples"].values()),
+			expand(f"results/{{sample}}.varscan.paired.vep.tsv", sample=config["samples"].values())
 

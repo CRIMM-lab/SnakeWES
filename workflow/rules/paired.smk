@@ -86,7 +86,7 @@ rule Mutect2Paired:
 		pon=config["gatk_pon"]
 	shell:
 		"""
-		gatk --java-options "-Xmx4G -XX:ParallelGCThreads={threads}" Mutect2 -R {params.ref} -I {input.bamT} -I {input.bamC} -pon {params.pon} --max-reads-per-alignment-start 0 --max-mnp-distance 0 -normal {wildcards.sample} -L {params.interval} --native-pair-hmm-threads {threads} --af-of-alleles-not-in-resource 0.0000025 --germline-resource {params.gnomAD} -O {output.vcf} 2>{log}
+		gatk --java-options "-Xmx4G -XX:ParallelGCThreads={threads}" Mutect2 -R {params.ref} -I {input.bamT} -I {input.bamC} -pon {params.pon} --max-reads-per-alignment-start 0 --max-mnp-distance 0 -normal {wildcards.sample}_germline -L {params.interval} --native-pair-hmm-threads {threads} --af-of-alleles-not-in-resource 0.0000025 --germline-resource {params.gnomAD} -O {output.vcf} 2>{log}
 		"""
 
 rule FilterMutectCallsPaired:
@@ -122,7 +122,7 @@ rule GermlineMpileup:
     log:
         "logs/{sample}.GermlineMpileup.log",
     params:
-        extra="-d 10000",  # optional
+        extra="-d 10000"  # optional
     wrapper:
         "v3.3.3/bio/samtools/mpileup"
 
@@ -134,7 +134,7 @@ rule TumorMpileup:
     output:
         "data/mpileup/{sample}.tumor.mpileup.gz",
     log:
-        "logs/{sample}.TumorMpileup.log",
+        "logs/{sample}.TumorMpileup.log"
     params:
         extra="-d 10000",  # optional
     wrapper:

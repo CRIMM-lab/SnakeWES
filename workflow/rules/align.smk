@@ -11,7 +11,7 @@ rule bwaTumor:
 	benchmark:
 		"benchmarks/{sample}.bwaTumor.txt"
 	params:
-		extra=r"-R '@RG\tID:{sample}_wesMasto\tSM:{sample}_tumor\tDT:20230515\tPI:150\tLB:SureSelectV8\tPL:ILLUMINA\tCN:BIODIVERSA'",
+		extra=r"-R '@RG\tID:{sample}_wesMasto\tSM:{sample}\tDT:20230515\tPI:150\tLB:SureSelectV8\tPL:ILLUMINA\tCN:BIODIVERSA'",
 		sort="samtools",  
 		sort_order="coordinate"
 	threads: config["threads"]
@@ -30,7 +30,7 @@ rule bwaControl:
 	benchmark:
 		"benchmarks/{sample}.bwaControl.txt"
 	params:
-		extra=r"-R '@RG\tID:{sample}_wesMasto\tSM:{sample}_control\tDT:20230515\tPI:150\tLB:SureSelectV8\tPL:ILLUMINA\tCN:BIODIVERSA'",
+		extra=r"-R '@RG\tID:{sample}_wesMasto\tSM:{sample}\tDT:20230515\tPI:150\tLB:SureSelectV8\tPL:ILLUMINA\tCN:BIODIVERSA'",
 		sort="samtools",  
 		sort_order="coordinate"
 	log:
@@ -50,7 +50,7 @@ rule bwaGermline:
 	benchmark:
 		"benchmarks/{sample}.bwaGermline.txt"
 	params:
-		extra=r"-R '@RG\tID:{sample}_wesMasto\tSM:{sample}_germline\tDT:20230515\tPI:150\tLB:SureSelectV8\tPL:ILLUMINA\tCN:BIODIVERSA'",
+		extra=r"-R '@RG\tID:{sample}_wesMasto\tSM:{sample}\tDT:20230515\tPI:150\tLB:SureSelectV8\tPL:ILLUMINA\tCN:BIODIVERSA'",
 		sort="samtools",  
 		sort_order="coordinate"
 	log:

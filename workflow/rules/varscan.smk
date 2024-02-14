@@ -1,17 +1,18 @@
+# true command line parameters "--min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01" instead of "--min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1"
+
 rule varscan_call_snv_on_controls: 
 	input:
 		bam="alignments/{sample}.control.dd.rec.bam",
 		bai="alignments/{sample}.control.dd.rec.bai"
 	output:
-		vcf_snv=temp("results/{sample}_control/{sample}.varscan.snv.vcf.gz"),
-		tbi_snv=temp("results/{sample}_control/{sample}.varscan.snv.vcf.gz.tbi")
+		vcf_snv="results/{sample}_control/{sample}.varscan.snv.vcf.gz",
+		tbi_snv="results/{sample}_control/{sample}.varscan.snv.vcf.gz.tbi"
 	message:
 		"varscan call snv - control {wildcards.sample}"
 	benchmark:
 		"benchmarks/{sample}.varscan.snv.callandNorm.txt"
 	threads: 1
 	params:
-		#varscan="/home/simone/programs/VarScan.v2.3.9.jar",
 		intervals=config["intervals"],
 		ref=config["genome"],
 	conda:
@@ -20,7 +21,7 @@ rule varscan_call_snv_on_controls:
 		"logs/{sample}.varscan.snv.callandNorm.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} | "
-		"varscan mpileup2snp --output-vcf 1 --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 | "
+		"varscan mpileup2snp --output-vcf 1 --min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1 | "
 		"bgzip -c > {output.vcf_snv} 2> {log} &&"
 		"tabix -p vcf {output.vcf_snv}"
 
@@ -29,8 +30,8 @@ rule varscan_call_snv_on_tumors:
 		bam="alignments/{sample}.tumor.dd.rec.bam",
 		bai="alignments/{sample}.tumor.dd.rec.bai"
 	output:
-		vcf_snv=temp("results/{sample}_tumor/{sample}.varscan.snv.vcf.gz"),
-		tbi_snv=temp("results/{sample}_tumor/{sample}.varscan.snv.vcf.gz.tbi")
+		vcf_snv="results/{sample}_tumor/{sample}.varscan.snv.vcf.gz",
+		tbi_snv="results/{sample}_tumor/{sample}.varscan.snv.vcf.gz.tbi"
 	threads: 1
 	params:
 		#varscan="/home/simone/programs/VarScan.v2.3.9.jar",
@@ -42,7 +43,7 @@ rule varscan_call_snv_on_tumors:
 		"logs/{sample}.varscan.snv.callandNorm.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} |"
-		"varscan mpileup2snp --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 |"
+		"varscan mpileup2snp --output-vcf --min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1 |"
 		"bgzip -c > {output.vcf_snv} &&"
 		"tabix -p vcf {output.vcf_snv}"
 
@@ -52,8 +53,8 @@ rule varscan_call_indel_on_controls:
 		bam="alignments/{sample}.control.dd.rec.bam",
 		bai="alignments/{sample}.control.dd.rec.bai"
 	output:
-		vcf_indel=temp("results/{sample}_control/{sample}.varscan.indel.vcf.gz"),
-		tbi_indel=temp("results/{sample}_control/{sample}.varscan.indel.vcf.gz.tbi")
+		vcf_indel="results/{sample}_control/{sample}.varscan.indel.vcf.gz",
+		tbi_indel="results/{sample}_control/{sample}.varscan.indel.vcf.gz.tbi"
 	message:
 		"varscan call indel - control {wildcards.sample}"
 	benchmark:
@@ -68,7 +69,7 @@ rule varscan_call_indel_on_controls:
 		"logs/{sample}.varscan.indel.callandNorm.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} |"
-		"varscan mpileup2indel --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 |"
+		"varscan mpileup2indel --output-vcf --min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1 |"
 		"bgzip -c > {output.vcf_indel} 2> {log} &&"
 		"tabix -p vcf {output.vcf_indel}"
 		
@@ -77,8 +78,8 @@ rule varscan_call_indel_on_tumors:
 		bam="alignments/{sample}.tumor.dd.rec.bam",
 		bai="alignments/{sample}.tumor.dd.rec.bai"
 	output:
-		vcf_indel=temp("results/{sample}_tumor/{sample}.varscan.indel.vcf.gz"),
-		tbi_indel=temp("results/{sample}_tumor/{sample}.varscan.indel.vcf.gz.tbi")
+		vcf_indel="results/{sample}_tumor/{sample}.varscan.indel.vcf.gz",
+		tbi_indel="results/{sample}_tumor/{sample}.varscan.indel.vcf.gz.tbi"
 	message:
 		"varscan call indel - tumor {wildcards.sample}"
 	benchmark:
@@ -94,7 +95,7 @@ rule varscan_call_indel_on_tumors:
 		"logs/{sample}.varscan.indel.callandNorm.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} | "
-		"varscan mpileup2indel --output-vcf --min-avg-qual 15 --p-value 0.1 --min-var-freq 0.01 | "
+		"varscan mpileup2indel --output-vcf --min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1 | "
 		"bgzip -c > {output.vcf_indel} && "
 		"tabix -p vcf {output.vcf_indel} "
 

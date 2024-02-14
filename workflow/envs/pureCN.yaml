@@ -1,0 +1,9 @@
+channels:
+- conda-forge
+- bioconda
+- defaults
+dependencies:
+- bioconductor-purecn=2.8.1
+- bioconductor-txdb.hsapiens.ucsc.hg38.knowngene=3.18.0
+- bioconductor-org.hs.eg.db=3.18.0
+- conda-forge::r-r.utils

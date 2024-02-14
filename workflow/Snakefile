@@ -34,15 +34,15 @@ if "controls" in config:
 
 	rule mutect2:
 		input:
-			expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filt.vcf.gz", sample=config["samples"].values()),
-			expand(f"results/{{sample}}_control/{{sample}}.mutect2.filt.vcf.gz", sample=config["controls"].values())
-
+			expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtOnCtr.vcf.gz", sample=config["samples"].values()),
+			expand(f"results/{{sample}}_control/{{sample}}.mutect2.filt.vcf.gz", sample=config["controls"].values()),
+			f"results/multisample.mutect2.vcf.gz"
+	
 	rule freebayes:
 		input:
 			expand(f"results/{{sample}}_tumor/{{sample}}.freebayes.filtOnCtr.vcf.gz", sample=config["samples"].values()),
 			expand(f"results/{{sample}}_control/{{sample}}.freebayes.filt.vcf.gz", sample=config["controls"].values()),
 			f"results/multisample.freebayes.vcf.gz"
-			#expand(f"results/freebayes/{{sample}}.freebayes.filtOnCtr.vep.tsv", sample={**config["samples"],**config["controls"]}.values())
 
 	rule varscan: 
 		input:

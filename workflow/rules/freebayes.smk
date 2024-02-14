@@ -1,55 +1,46 @@
-rule freebayesCallTumor:
+rule freebayes_call_and_norm_on_samples: 
 	input:
-		alns="alignments/{sample}.tumor.dd.rec.bam",
-		ref=config["genome"],
-		regions=config["intervals"],
+		bam="alignments/{sample}.tumor.dd.rec.bam",
+		bai="alignments/{sample}.tumor.dd.rec.bai"
 	output:
-		vcf="results/{sample}_tumor/{sample}.freebayes.vcf.gz",
-	message:
-		"freebayes calling on tumor {wildcards.sample}"
-	benchmark:
-		"benchmarks/{sample}.freebayesCallTumor.txt"
-	log:
-		"logs/{sample}.freebayesCallTumor.log",
+		"results/{sample}_tumor/{sample}.freebayes.vcf.gz"
+	threads: 1
+	conda:
+		"../envs/freebayes.yaml"
 	params:
-		chunksize=100000,
-		normalize="-m - -f "+config["genome"],
-		extra="-F 0.01 -C 2 --pooled-continuous"
-	threads: config["threads"]
-	resources:
-		mem_mb=4096,
-	wrapper:
-		"v3.3.3/bio/freebayes"
+		ref=config["genome"],
+		intervals=config["intervals"]
+	log:
+		"logs/{sample}.freebayes_call_and_norm_on_samples.log"
+	shell:
+		"freebayes -f {params.ref} -F 0.01 -C 2 -t {params.intervals} --pooled-continuous {input.bam} | "
+		"bcftools norm -m - -f {params.ref} -Oz -o {output} 2>{log}"
 
-rule freebayesCallControl:
+
+rule freebayes_call_and_norm_on_controls: 
 	input:
-		alns="alignments/{sample}.control.dd.rec.bam",
-		ref=config["genome"],
-		regions=config["intervals"],
+		bam="alignments/{sample}.control.dd.rec.bam",
+		bai="alignments/{sample}.control.dd.rec.bai"
 	output:
-		vcf="results/{sample}_control/{sample}.freebayes.vcf.gz",
-	message:
-		"freebayes calling on control {wildcards.sample}"
-	benchmark:
-		"benchmarks/{sample}.freebayesCallControl.txt"
-	log:
-		"logs/{sample}.freebayesCallControl.log",
+		"results/{sample}_control/{sample}.freebayes.vcf.gz"
+	threads: 1
+	conda:
+		"../envs/freebayes.yaml"
 	params:
-		chunksize=100000,
-		normalize="-m - -f "+config["genome"],
-		extra="-F 0.01 -C 2 --pooled-continuous"
-	threads: config["threads"]
-	resources:
-		mem_mb=4096,
-	wrapper:
-		"v3.3.3/bio/freebayes"
+		ref=config["genome"],
+		intervals=config["intervals"]
+	log:
+		"logs/{sample}.freebayes_call_and_norm_on_controls.log"
+	shell:
+		"freebayes -f {params.ref} -F 0.01 -C 2 -t {params.intervals} --pooled-continuous {input.bam} | "
+		"bcftools norm -m - -f {params.ref} -Oz -o {output} 2>{log}"
 
 
-rule freebayesAddAFtumor:
+rule freebayes_add_af_samples:
 	input:
 		"results/{sample}_tumor/{sample}.freebayes.vcf.gz"
 	output:
-		temp("results/{sample}_tumor/{sample}.freebayes.annotAF.vcf.gz")
+		"results/{sample}_tumor/{sample}.freebayes.annotAF.vcf.gz"
 	message:
 		"freebayes add AF on tumor {wildcards.sample}"
 	benchmark:
@@ -69,11 +60,11 @@ rule freebayesAddAFtumor:
 		rm {params}
 		"""
 
-rule freebayesAddAFcontrol:
+rule freebayes_add_af_control:
 	input:
 		"results/{sample}_control/{sample}.freebayes.vcf.gz"
 	output:
-		temp("results/{sample}_control/{sample}.freebayes.annotAF.vcf.gz")
+		"results/{sample}_control/{sample}.freebayes.annotAF.vcf.gz"
 	message:
 		"freebayes add AF on control {wildcards.sample}"
 	benchmark:
@@ -87,13 +78,13 @@ rule freebayesAddAFcontrol:
 		"results/{sample}_control/{sample}.freebayes.annotAF.tsv.gz"
 	shell:
 		"""
-		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t%RO\t%AO\n' {input} 2> {log} | 
-		awk 'OFS=FS="\t"''{{print $1,$2,$3,$4,$6/($5 + $6)}}' | bgzip -c > {params} 2>> {log} && 
-		tabix -b2 -e2 {params} && bcftools annotate -a {params} --columns CHROM,POS,REF,ALT,AF {input} -Oz -o {output} 2>> {log} && 
+		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t%RO\t%AO\n' {input} 2>{log} | 
+		awk 'OFS=FS="\t"''{{print $1,$2,$3,$4,$6/($5 + $6)}}' | bgzip -c > {params} 2>>{log} && 
+		tabix -b2 -e2 {params} && bcftools annotate -a {params} --columns CHROM,POS,REF,ALT,AF {input} -Oz -o {output} 2>>{log} && 
 		rm {params}
 		"""
 
-rule freebayesFilterTumor: 
+rule freebayes_filter_samples: 
 	input:
 		"results/{sample}_tumor/{sample}.freebayes.annotAF.vcf.gz"
 	output:
@@ -118,7 +109,7 @@ rule freebayesFilterTumor:
 		"bcftools sort -Oz -o {output} 2>> {log} && "
 		"tabix -p vcf {output} 2>> {log}"
 
-rule freebayesFilterControl: 
+rule freebayes_filter_control: 
 	input:
 		"results/{sample}_control/{sample}.freebayes.annotAF.vcf.gz"
 	output:
@@ -144,10 +135,10 @@ rule freebayesFilterControl:
 		"bcftools sort -Oz -o {output.vcf} 2>> {log} && "
 		"tabix -p vcf {output.vcf}"
 
-rule freebayesMergeControl:
+rule freebayes_merge_control_vars:
 	input:
-		expand(f"results/{{sample}}_control/{{sample}}.freebayes.filt.vcf.gz", sample=config['controls'].values()),
-		expand(f"results/{{sample}}_control/{{sample}}.freebayes.filt.vcf.gz.tbi", sample=config['controls'].values())
+		vcf=expand(f"results/{{sample}}_control/{{sample}}.freebayes.filt.vcf.gz", sample=config['controls'].values()),
+		tbi=expand(f"results/{{sample}}_control/{{sample}}.freebayes.filt.vcf.gz.tbi", sample=config['controls'].values())
 	output:
 		vcf="results/customPoN.freebayes.vcf.gz",
 		tbi="results/customPoN.freebayes.vcf.gz.tbi"
@@ -161,17 +152,18 @@ rule freebayesMergeControl:
 	log: 
 		"logs/freebayesMergeControl.log"
 	shell:
-		"bcftools merge -m none -Oz -o {output.vcf} {input} 2> {log} && "
+		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} && "
 		"tabix -p vcf {output.vcf} 2>> {log}"
 
 
-rule freebayesRemoveControl: 
+rule freebayes_remove_control_vars: 
 	input:
 		vcf="results/{sample}_tumor/{sample}.freebayes.filt.vcf.gz",
 		PoN="results/customPoN.freebayes.vcf.gz",
 		tbi="results/customPoN.freebayes.vcf.gz.tbi"
 	output:
-		temp("results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vcf.gz")
+		vcf="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vcf.gz.tbi"
 	message:
 		"freebayes remove controls variants"
 	benchmark:
@@ -182,54 +174,20 @@ rule freebayesRemoveControl:
 	log: 
 		"logs/{sample}.freebayesRemoveControl.log"
 	shell:
-		"bcftools isec -w1 -Oz -c none -n~10 -o {output} {input.vcf} {input.PoN} 2> {log}"
+		"bcftools isec -w1 -Oz -c none -n~10 -o {output.vcf} {input.vcf} {input.PoN} 2> {log} && "
+		"tabix -p vcf {output.vcf}"
 
 
-#rule freebayes_vep_annotation: 
-#	input:
-#		vcf="results/freebayes/{sample}.freebayes.filtOnCtr.vcf.gz"
-#	output:
-#		vcf="results/freebayes/{sample}.freebayes.filtOnCtr.vep.vcf.gz",
-#		summ_html="results/freebayes/{sample}.freebayes.vep.summary.html"
-#	threads: 10
-#	params:
-#		vep="/home/alessio/programs/ensembl-vep/vep",
-#		ref=config["genome"]
-#	log: 
-#		"logs/{sample}.freebayes.filtOnCtr.vep.log"
-#	shell:
-#		"perl {params.vep} -i {input.vcf} -o {output.vcf} --everything --species homo_sapiens --vcf "
-#			"--compress_output gzip --stats_file {output.summ_html} --assembly GRCh38 --no_progress --buffer_size 5000 " 
-#			"--ccds --uniprot --hgvs --symbol --numbers --domains --gene_phenotype --canonical --protein --biotype --uniprot "
-#			"--cache --cache_version 109 --merged --tsl --variant_class --shift_hgvs 1 --check_existing --total_length --allele_number "
-#			"--no_escape --xref_refseq --failed 1 --pick --dir_cache /home/alessio/.vep --fasta {params.ref} --format vcf --offline "
-#			"--pubmed --fork {threads} --sift b --polyphen b --af --af_1kg --af_gnomade --af_gnomadg --regulatory"
-
-#rule freebayes_splitvep:
-#	input:
-#		vcf="results/freebayes/{sample}.freebayes.filtOnCtr.vep.vcf.gz"
-#	output:
-#		tsv="results/freebayes/{sample}.freebayes.filtOnCtr.vep.tsv"
-#	threads: 1
-#	log: 
-#		"logs/{sample}.freebayes.splitvep.tsv"
-#	shell:
-#		"""
-#		bcftools +split-vep -o {output.tsv} {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%Consequence\t%IMPACT\t%SYMBOL\t%Gene\t%Feature_type\t%Feature\t%BIOTYPE\t%EXON\t%INTRON\t%HGVSc\t%HGVSp\t%CDS_position\t%Amino_acids\t%Codons\t%Existing_variation\t%DISTANCE\t%VARIANT_CLASS\t%CANONICAL\t%MANE_SELECT\t%MANE_PLUS_CLINICAL\t%TSL\t%ENSP\t%UNIPROT_ISOFORM\t%REFSEQ_MATCH\t%GENE_PHENO\t%SIFT\t%PolyPhen\t%DOMAINS\t%AF\t%EUR_AF\t%gnomADe_AF\t%gnomADe_NFE_AF\t%gnomADg_AF\t%gnomADg_NFE_AF\t%MAX_AF\t%CLIN_SIG\t%SOMATIC\t%PHENO\t%PUBMED\t%MOTIF_NAME\t%HIGH_INF_POS\t%MOTIF_SCORE_CHANGE\t%TRANSCRIPTION_FACTORS[\t%AD][\t%AF][\t%GT]\n" -d -A tab 
-#		"""
-
-
-
-#rule merge_freebayes_samples_variants: 
-#    input:
-#        vcf=expand("results/freebayes/{sample}.freebayes.filtOnCtr.vcf.gz", sample=config['samples'].values()),
-#        tbi=expand("results/freebayes/{sample}.freebayes.filtOnCtr.vcf.gz.tbi", sample=config['samples'].values())
-#    output:
-#        vcf="results/freebayes/multisample.freebayes.vcf.gz",
-#        tbi="results/freebayes/multisample.freebayes.vcf.gz.tbi"
-#    threads: 1
-#    log: 
-#        "logs/multisample.freebayes.log"
-#    shell:
-#        "bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} &&"
-#        "tabix -p vcf {output.vcf}"
+rule merge_freebayes_samples_variants: 
+    input:
+        vcf=expand("results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vcf.gz", sample=config['samples'].values()),
+        tbi=expand("results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vcf.gz.tbi", sample=config['samples'].values())
+    output:
+        vcf="results/multisample.freebayes.vcf.gz",
+        tbi="results/multisample.freebayes.vcf.gz.tbi"
+    threads: 1
+    log: 
+        "logs/multisample.freebayes.log"
+    shell:
+        "bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2>{log} && "
+        "tabix -p vcf {output.vcf} 2>>{log}"

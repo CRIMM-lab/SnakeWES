@@ -1,4 +1,4 @@
-rule Mutect2Tumor: 
+rule mutect2_tumor: 
 	input:
 		fasta=config["genome"],
 		map="alignments/{sample}.tumor.dd.rec.bam",
@@ -21,7 +21,7 @@ rule Mutect2Tumor:
 	wrapper:
 		"v3.3.3/bio/gatk/mutect"
 
-rule Mutect2Control: 
+rule mutect2_control: 
 	input:
 		fasta=config["genome"],
 		map="alignments/{sample}.control.dd.rec.bam",
@@ -44,7 +44,7 @@ rule Mutect2Control:
 	wrapper:
 		"v3.3.3/bio/gatk/mutect"
 
-rule OrientationModelTumor:
+rule orientation_model_tumor:
 	input:
 		f1r2="data/{sample}.tumor.f1r2.tar.gz",
 	output:
@@ -56,7 +56,7 @@ rule OrientationModelTumor:
 	wrapper:
 		"v3.3.3/bio/gatk/learnreadorientationmodel"
 
-rule OrientationModelControl:
+rule orientation_model_control:
 	input:
 		f1r2="data/{sample}.control.f1r2.tar.gz",
 	output:
@@ -68,13 +68,13 @@ rule OrientationModelControl:
 	wrapper:
 		"v3.3.3/bio/gatk/learnreadorientationmodel"
 
-rule GetPileupSummariesTumor:
+rule get_pileup_summaries_tumor:
 	input:
 		bam="alignments/{sample}.tumor.dd.rec.bam",
 		intervals=config["intervals"],
 		variants=config["gnomAD"]
 	output:
-		"data/{sample}.tumor.pileup.table"
+		"data/{sample}.tumor.pileupTable"
 	threads: 1
 	resources:
 		mem_mb=4096,
@@ -85,13 +85,13 @@ rule GetPileupSummariesTumor:
 	wrapper:
 		"v3.3.3/bio/gatk/getpileupsummaries"
 
-rule GetPileupSummariesControl:
+rule get_pileup_summaries_control:
 	input:
 		bam="alignments/{sample}.control.dd.rec.bam",
 		intervals=config["intervals"],
 		variants=config["gnomAD"]
 	output:
-		"data/{sample}.control.pileup.table"
+		"data/{sample}.control.pileupTable"
 	threads: 1
 	resources:
 		mem_mb=4096,
@@ -102,12 +102,12 @@ rule GetPileupSummariesControl:
 	wrapper:
 		"v3.3.3/bio/gatk/getpileupsummaries"
 
-rule CalculateContaminationTumor:
+rule calculate_contamination_tumor:
 	input:
-		"data/{sample}.tumor.pileup.table"
+		"data/{sample}.tumor.pileupTable"
 	output:
-		contamination="data/{sample}.tumor.contamination.table",
-		segmentation="data/{sample}.tumor.tumorseg.txt"
+		contamination="data/{sample}.tumor.contaminationTable",
+		segmentation="data/{sample}.tumor.tumorSeg.txt"
 	threads: 1
 	log:
 		"logs/{sample}.CalculateContaminationTumor.log",
@@ -120,12 +120,12 @@ rule CalculateContaminationTumor:
 	shell:
 		"gatk --java-options {params.mem_mb} CalculateContamination -I {input} -O {output.contamination} --tumor-segmentation {output.segmentation} > {log} 2>&1"
 
-rule CalculateContaminationControl:
+rule calculate_contamination_control:
 	input:
-		"data/{sample}.control.pileup.table"
+		"data/{sample}.control.pileupTable"
 	output:
-		contamination="data/{sample}.control.contamination.table",
-		segmentation="data/{sample}.control.tumorseg.txt"
+		contamination="data/{sample}.control.contaminationTable",
+		segmentation="data/{sample}.control.tumorSeg.txt"
 	threads: 1
 	log:
 		"logs/{sample}.CalculateContaminationControl.log",
@@ -138,17 +138,17 @@ rule CalculateContaminationControl:
 	shell:
 		"gatk --java-options {params.mem_mb} CalculateContamination -I {input} -O {output.contamination} --tumor-segmentation {output.segmentation} > {log} 2>&1"
 
-rule FilterMutectCallsTumor:
+rule filter_mutect_calls_tumor:
 	input:
 		vcf="results/{sample}_tumor/{sample}.mutect2.vcf.gz",
 		ref=config["genome"],
 		bam="alignments/{sample}.tumor.dd.rec.bam",
 		intervals=config["intervals"],
-		contamination="data/{sample}.tumor.contamination.table", # from gatk CalculateContamination
-		segmentation="data/{sample}.tumor.tumorseg.txt", # from gatk CalculateContamination
+		contamination="data/{sample}.tumor.contaminationTable", # from gatk CalculateContamination
+		segmentation="data/{sample}.tumor.tumorSeg.txt", # from gatk CalculateContamination
 		f1r2="data/{sample}.tumor.artifacts_prior.tar.gz" # from gatk LearnReadOrientationBias
 	output:
-		vcf="results/{sample}_tumor/{sample}.mutect2.filtered.vcf.gz",
+		vcf=temp("results/{sample}_tumor/{sample}.mutect2.filt.vcf.gz"),
 	log:
 		"logs/{sample}.FilterMutectCallsTumor.log",
 	params:
@@ -159,17 +159,17 @@ rule FilterMutectCallsTumor:
 	wrapper:
 		"v3.3.3/bio/gatk/filtermutectcalls"
 
-rule FilterMutectCallsControl:
+rule filter_mutect_calls_control:
 	input:
 		vcf="results/{sample}_control/{sample}.mutect2.vcf.gz",
 		ref=config["genome"],
 		bam="alignments/{sample}.control.dd.rec.bam",
 		intervals=config["intervals"],
-		contamination="data/{sample}.control.contamination.table", # from gatk CalculateContamination
-		segmentation="data/{sample}.control.tumorseg.txt", # from gatk CalculateContamination
+		contamination="data/{sample}.control.contaminationTable", # from gatk CalculateContamination
+		segmentation="data/{sample}.control.tumorSeg.txt", # from gatk CalculateContamination
 		f1r2="data/{sample}.control.artifacts_prior.tar.gz" # from gatk LearnReadOrientationBias
 	output:
-		vcf="results/{sample}_control/{sample}.mutect2.filtered.vcf.gz",
+		vcf=temp("results/{sample}_control/{sample}.mutect2.filt.vcf.gz")
 	log:
 		"logs/{sample}.FilterMutectCallsControl.log",
 	params:
@@ -179,3 +179,108 @@ rule FilterMutectCallsControl:
 		mem_mb=4096,
 	wrapper:
 		"v3.3.3/bio/gatk/filtermutectcalls"
+
+
+rule clean_filter_mutect_tumor_output:
+	input:
+		"results/{sample}_tumor/{sample}.mutect2.filt.vcf.gz"
+	output:
+		vcf="results/{sample}_tumor/{sample}.mutect2.filtered.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.mutect2.filtered.vcf.gz.tbi"
+	threads: 1
+	log:
+		"logs/{sample}.clean_filter_mutect_tumor_output.log"
+	params:	
+		excl=config["chr_to_exclude"],
+		depth=config['filtering_tumors']['min_depth'],
+		vaf=config['filtering_tumors']['vaf'],
+		alt=config['filtering_tumors']['alt_depth'],
+		ref=config["genome"],
+	conda:
+		"../envs/bcftools.yaml"
+	shell:	
+		"""
+		bcftools view -Ov -i'FILTER == "PASS"' {input} |
+		grep -v -f {params.excl} | 
+		bcftools norm -m - -f {params.ref} | 
+		bcftools view -i "FORMAT/DP[0] >= {params.depth} & FORMAT/AD[0:1] >= {params.alt} & FORMAT/AF >= {params.vaf}" -Oz -o {output.vcf} &&
+		tabix -p vcf {output.vcf}
+		"""
+
+rule clean_filter_mutect_control_output:
+	input:
+		"results/{sample}_control/{sample}.mutect2.filt.vcf.gz"
+	output:
+		vcf="results/{sample}_control/{sample}.mutect2.filtered.vcf.gz",
+		tbi="results/{sample}_control/{sample}.mutect2.filtered.vcf.gz.tbi"
+	threads: 1
+	log:
+		"logs/{sample}.clean_filter_mutect_control_output.log"
+	params:
+		excl=config["chr_to_exclude"],
+		depth=config['filtering_controls']['min_depth'],
+		vaf=config['filtering_controls']['vaf'],
+		alt=config['filtering_controls']['alt_depth'],
+		ref=config["genome"],
+	conda:
+		"../envs/bcftools.yaml"
+	shell:	
+		"""
+		bcftools view -Ov -i'FILTER == "PASS"' {input} |
+		grep -v -f {params.excl} | 
+		bcftools norm -m - -f {params.ref} | 
+		bcftools view -i "FORMAT/DP[0] >= {params.depth} & FORMAT/AD[0:1] >= {params.alt} & FORMAT/AF >= {params.vaf}" -Oz -o {output.vcf} &&
+		tabix -p vcf {output.vcf}
+		"""
+
+rule merge_mutect2_control_vars:
+	input:
+		vcf=expand(f"results/{{sample}}_control/{{sample}}.mutect2.filtered.vcf.gz", sample=config["controls"].values()),
+		tbi=expand(f"results/{{sample}}_control/{{sample}}.mutect2.filtered.vcf.gz.tbi", sample=config["controls"].values())
+	output:
+		vcf="results/custom_pon.mutect2.vcf.gz",
+		tbi="results/custom_pon.mutect2.vcf.gz.tbi" 
+	threads: 1
+	log:
+		"logs/merge_mutect2_control_vars.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} && " 
+		"tabix -p vcf {output.vcf}"
+
+rule remove_mutect2_control_vars:
+	input:
+		vcf="results/{sample}_tumor/{sample}.mutect2.filtered.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.mutect2.filtered.vcf.gz.tbi",
+		PoN_vcf="results/custom_pon.mutect2.vcf.gz",
+		PoN_tbi="results/custom_pon.mutect2.vcf.gz.tbi"
+	output:
+		vcf=temp("results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vcf.gz"),
+		tbi=temp("results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vcf.gz.tbi")
+	threads: 1
+	log:
+		"logs/{sample}.remove_mutect2_control_vars.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"bcftools isec -w1 -Oz -c none -n~10 -o {output.vcf} {input.vcf} {input.PoN_vcf} 2> {log} && "
+		"tabix -p vcf {output.vcf}"
+
+
+rule merge_mutect2_tumor_output:
+	input:
+		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtOnCtr.vcf.gz", sample=config["samples"].values()),
+		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtOnCtr.vcf.gz.tbi", sample=config["samples"].values())
+	output:
+		vcf="results/multisample.mutect2.vcf.gz",
+		tbi="results/multisample.mutect2.vcf.gz.tbi"
+	threads: 1
+	log:
+		"logs/merge_mutect2_tumor_output.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2>{log} && "
+		"tabix -p vcf {output.vcf}"
+

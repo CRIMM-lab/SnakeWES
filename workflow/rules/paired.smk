@@ -86,7 +86,7 @@ rule Mutect2Paired:
 		pon=config["gatk_pon"]
 	shell:
 		"""
-		gatk --java-options "-Xmx4G -XX:ParallelGCThreads={threads}" Mutect2 -R {params.ref} -I {input.bamT} -I {input.bamC} -pon {params.pon} --max-reads-per-alignment-start 0 --max-mnp-distance 0 -normal {wildcards.sample}_germline -L {params.interval} --native-pair-hmm-threads {threads} --af-of-alleles-not-in-resource 0.0000025 --germline-resource {params.gnomAD} -O {output.vcf} 2>{log}
+		gatk --java-options "-Xmx4G -XX:ParallelGCThreads={threads}" Mutect2 -R {params.ref} -I {input.bamT} -I {input.bamC} -pon {params.pon} --max-reads-per-alignment-start 0 --max-mnp-distance 0 -normal {wildcards.sample} -L {params.interval} --native-pair-hmm-threads {threads} --af-of-alleles-not-in-resource 0.0000025 --germline-resource {params.gnomAD} -O {output.vcf} 2>{log}
 		"""
 
 rule FilterMutectCallsPaired:
@@ -110,20 +110,6 @@ rule FilterMutectCallsPaired:
 	wrapper:
 		"v3.3.3/bio/gatk/filtermutectcalls"
 
-rule NormMutect2Paired:
-	input:
-		"results/{sample}.mutect2.paired.filtered.vcf.gz"
-	output:
-		"results/{sample}.mutect2.paired.filtered.norm.vcf.gz"
-	log:
-		"logs/{sample}.NormMutect2Paired.log",
-	conda:
-		"../envs/bcftools.yaml"
-	params:
-		genome=config["genome"]
-	shell:
-		"bcftools view -f PASS {input} |bcftools norm -m - -f {params.genome} -O z -o {output} - 2>{log}"
-
 #######################################################################################   VARSCAN   #######################################################################################
 
 rule GermlineMpileup:
@@ -136,7 +122,7 @@ rule GermlineMpileup:
     log:
         "logs/{sample}.GermlineMpileup.log",
     params:
-        extra="-d 10000"  # optional
+        extra="-d 10000",  # optional
     wrapper:
         "v3.3.3/bio/samtools/mpileup"
 
@@ -148,7 +134,7 @@ rule TumorMpileup:
     output:
         "data/mpileup/{sample}.tumor.mpileup.gz",
     log:
-        "logs/{sample}.TumorMpileup.log"
+        "logs/{sample}.TumorMpileup.log",
     params:
         extra="-d 10000",  # optional
     wrapper:
@@ -189,7 +175,7 @@ rule VarscanSomatic:
 		"../envs/varscan.yaml"
 	message:
 		"Calling somatic variants {wildcards.sample}"
-	threads:10
+	threads:1
 	shell:
 		"varscan somatic {input.normal_pileup} {input.tumor_pileup} --output-vcf --min-avg-qual 15 --p-value 0.05 --min-var-freq 0.03  --output-snp {output.snp} --output-indel {output.indel} 2>{log}"
 
@@ -212,7 +198,7 @@ rule MergeVarscanOutput:
     input:
         calls=["results/{sample}.varscan.paired.snp.vcf.gz", "results/{sample}.varscan.paired.indel.vcf.gz"]
     output:
-        "results/{sample}.varscan.paired.tmp.vcf.gz"
+        temp("results/{sample}.varscan.paired.tmp.vcf.gz")
     log:
         "logs/{sample}.MergeVarscanOutput.log",
     params:
@@ -224,25 +210,29 @@ rule MergeVarscanOutput:
     wrapper:
         "v3.3.3/bio/bcftools/concat"
 
-rule NormVarscanPaired:
+rule ReheaderVarscanOutput:
 	input:
-		"results/{sample}.varscan.paired.vcf.gz"
+		"results/{sample}.varscan.paired.tmp.vcf.gz"
 	output:
-		"results/{sample}.varscan.paired.norm.vcf.gz"
+		"results/{sample}.varscan.paired.vcf.gz"
+	threads: 1
+	params:
+		txt="data/{sample}.rh.txt"
 	log:
-		"logs/{sample}.NormVarscanPaired.log",
+		"logs/{sample}.varscan.rh.log"
 	conda:
 		"../envs/bcftools.yaml"
-	params:
-		genome=config["genome"]
-	shell:
-		"bcftools view -f PASS {input} |bcftools norm -m - -f {params.genome} -O z -o {output} - 2>{log}"
+	shell: 
+		"echo {wildcards.sample}_germline > {params.txt} && "
+		"echo {wildcards.sample}_tumor >> {params.txt} && "
+		"bcftools reheader -s {params.txt} -o {output} {input} && "
+		"rm {params.txt}"
 
 
 #######################################################################################   VEP   #######################################################################################
 rule VepMutectPaired:
 	input:
-		"results/{sample}.mutect2.paired.filtered.norm.vcf.gz"
+		"results/{sample}.mutect2.paired.filtered.vcf.gz"
 	output:
 		calls="results/{sample}.mutect2.paired.filtered.vep.vcf.gz",
 		tbi="results/{sample}.mutect2.paired.filtered.vep.vcf.gz.tbi",
@@ -262,7 +252,7 @@ rule VepMutectPaired:
 
 rule VepVarscanPaired:
 	input:
-		"results/{sample}.varscan.paired.norm.vcf.gz"
+		"results/{sample}.varscan.paired.vcf.gz"
 	output:
 		calls="results/{sample}.varscan.paired.vep.vcf.gz",
 		tbi="results/{sample}.varscan.paired.vep.vcf.gz.tbi",
@@ -346,7 +336,7 @@ rule ParseAnnotationVepVarScan:
 	input:
 		"results/multisample.varscan.paired.vep.formatted.vcf.gz"
 	output:
-		"results/multisample.varscan.paired.tmp.tsv"
+		f"results/multisample.varscan.paired.tmp.tsv"
 	threads: 1
 	log:
 		"logs/ParseAnnotationVepVarScan.log"

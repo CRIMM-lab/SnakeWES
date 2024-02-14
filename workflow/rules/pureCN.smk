@@ -122,14 +122,14 @@ rule CoverageControlPureCN:
 		"Rscript {params} {input.txt} {input.bam} {output.cov_raw} {output.cov_loess} {output.qc}"
 
 
-rule NormalDBpureCN:
+rule ControlDBpureCN:
 	input:
 		ctr_cov=expand(f"alignments/{{sample}}.control.coveragePureCN.loess.txt", sample=config["controls"].values()),
 		pon="results/customPoN.PureCN.vcf.gz",
 		tbi="results/customPoN.PureCN.vcf.gz.tbi"
 	output:
 		cov_list="alignments/control_coverages.list",
-		rds="data/controlDB.rds"
+		rds="data/controlDB.rds",
 		rds_bias="data/mapping_bias.rds"
 	conda:
 		"../envs/pureCN.yaml"

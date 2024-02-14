@@ -32,29 +32,12 @@ if "controls" in config:
 			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
 			expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values())
 
-	rule mutect2:
-		input:
-			expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtOnCtr.vcf.gz", sample=config["samples"].values()),
-			expand(f"results/{{sample}}_control/{{sample}}.mutect2.filt.vcf.gz", sample=config["controls"].values()),
-			f"results/multisample.mutect2.vcf.gz"
 	
-	rule freebayes:
+	rule callers:
 		input:
-			expand(f"results/{{sample}}_tumor/{{sample}}.freebayes.filtOnCtr.vcf.gz", sample=config["samples"].values()),
-			expand(f"results/{{sample}}_control/{{sample}}.freebayes.filt.vcf.gz", sample=config["controls"].values()),
-			f"results/multisample.freebayes.vcf.gz"
-
-	rule varscan: 
-		input:
-			expand(f"results/{{sample}}_control/{{sample}}.varscan.filt.vcf.gz", sample=config["controls"].values()),
-			expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz", sample=config["samples"].values()),
-			f"results/multisample.varscan.vcf.gz"
-
-	rule bcftools:
-		input:
-			expand(f"results/{{sample}}_control/{{sample}}.bcftools.filt.vcf.gz", sample=config["controls"].values()),
-			expand(f"results/{{sample}}_tumor/{{sample}}.bcftools.filtOnCtr.vcf.gz", sample=config["samples"].values()),
-			f"results/multisample.bcftools.vcf.gz"
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			expand(f"results/{{sample}}_control/{{sample}}.{{caller}}.filt.vcf.gz", sample=config["controls"].values(), caller=config["callers"].values()),
+			expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values())
 
 	rule pureCN:
 		input:

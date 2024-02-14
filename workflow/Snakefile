@@ -61,6 +61,12 @@ if "controls" in config:
 			expand(f"alignments/{{sample}}.tumor.coveragePureCN.loess.txt", sample=config["samples"].values()),
 			expand(f"alignments/{{sample}}.control.coveragePureCN.loess.txt", sample=config["controls"].values())
 
+	rule vep:
+		input:
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
+
+
 else:
 
 	include: "rules/paired.smk"

@@ -70,7 +70,6 @@ if "controls" in config:
 else:
 
 	include: "rules/paired.smk"
-	include: "rules/paired.OneSample.smk"
 
 	rule paired:
 		input:

@@ -6,6 +6,8 @@ include: "rules/align.smk"
 include: "rules/alfred.smk"
 include: "rules/vep.smk"
 
+
+
 if "controls" in config:
 
 	include: "rules/mutect2.smk"
@@ -46,8 +48,10 @@ if "controls" in config:
 
 	rule vep:
 		input:
-			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
-			expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.tmp01.tsv", sample=config["samples"].values(), caller=config["callers"].values()),
+			expand(f"results/multisample.{{caller}}.vep.tmp01.tsv", caller=config["callers"].values()) 
+			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			#expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
 
 
 else:
@@ -82,4 +86,3 @@ else:
 			expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values()),
 			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.tsv", sample=config["samples"].values()),
 			expand(f"results/{{sample}}.varscan.paired.vep.tsv", sample=config["samples"].values())
-

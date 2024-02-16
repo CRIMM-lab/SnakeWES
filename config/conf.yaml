@@ -16,26 +16,29 @@ clinvar: resources/clinvar_20231217.vcf.gz
 
 vepcache: resources/vep/cache/
   
+run_mode: # must be one of the following: nocontrol, PoN , paired
+
+
 samples:
 
-  sample1: CD37847
-#  sample2: A0340
-#  sample3: A0734
-#  sample4: A0789
-#  sample5: A0934
+  sample1: A0030
+  sample2: A0340
+  sample3: A0734
+  sample4: A0789
+  sample5: A0934
 
 strand:
   
   strandR1: R1
   strandR2: R2
 
-#controls:
+controls:
   
-#  control1: CD37493
-#  control2: CD31983
-#  control3: CD37846
-#  control4: CD39887
-#  control5: CD3A0066
+  control1: CD37493
+  control2: CD31983
+  control3: CD37846
+  control4: CD39887
+  control5: CD3A0066
 
 paired:
 
@@ -43,36 +46,36 @@ paired:
     paired2: germline
 
 # Set number of cores 
-threads: 5
+threads: 1
 
 # PARAMETERS FOR CONTROLS FILTERING 
 filtering_controls:
 
-## Minimum read depth to call a variant (50 suggested)   
-  min_depth: 100
+## Minimum read depth to call a variant (100 suggested)   
+  min_depth: 1
 
-## Minimum variant allele frequency (1% suggested)  
-  vaf: 0.01
+## Minimum variant allele frequency (5% suggested)  
+  vaf: 0
 
 ## Minimum variant supporting reads (5 suggested)   
-  alt_depth: 5
+  alt_depth: 1
 
 # PARAMETERS FOR SAMPLES FILTERING 
 filtering_tumors:
   
-  ## Minimum read depth to call a variant (50 suggested)   
-  min_depth: 50
+  ## Minimum read depth to call a variant (100 suggested)   
+  min_depth: 1
 
-  ## Minimum variant allele frequency (3% suggested)  
-  vaf: 0.03
+  ## Minimum variant allele frequency (5% suggested)  
+  vaf: 0
 
   ## Minimum variant supporting reads (5 suggested)   
-  alt_depth: 5
+  alt_depth: 1
 
 
 callers:
   
-  #caller1: mutect2
-  #caller2: freebayes
+  caller1: mutect2
+  caller2: freebayes
   caller3: bcftools
   caller4: varscan

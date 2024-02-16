@@ -72,8 +72,10 @@ rule vep_multisample:
 rule split_vep_mutect2_single_sample:
 	input:
 		vcf="results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.html",
 	output:
-		tsv="results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.tmp01.tsv"
+		"results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.tmp01.tsv"
 	threads: 1
 	log:
 		"logs/{sample}.split_vep_mutect2_single_sample.log"
@@ -81,14 +83,16 @@ rule split_vep_mutect2_single_sample:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%FREQ][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 rule split_vep_mutect2_multisample:
 	input:
-		vcf="results/multisample.mutect2.filtOnCtr.vep.vcf.gz",
+		vcf="results/multisample.mutect2.vep.vcf.gz",
+		tbi="results/multisample.mutect2.vep.vcf.gz.tbi",
+		html="results/multisample.mutect2.vep.html"
 	output:
-		tsv="results/multisample.mutect2.filtOnCtr.vep.tmp01.tsv"
+		"results/multisample.mutect2.vep.tmp01.tsv"
 	threads: 1
 	log:
 		"logs/split_vep_mutect2_multisample.log"
@@ -96,7 +100,7 @@ rule split_vep_mutect2_multisample:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%FREQ][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 # FREEBAYES
@@ -104,24 +108,27 @@ rule split_vep_mutect2_multisample:
 rule split_vep_freebayes_single_sample:
 	input:
 		vcf="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.html",
 	output:
-		tsv="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.tmp01.tsv"
-	threads:
-		config["threads"]
+		"results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.tmp01.tsv"
+	threads:1
 	log:
 		"logs/{sample}.split_vep_freebayes_single_sample.log"
 	conda:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RO\t%AO\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 rule split_vep_freebayes_multisample:
 	input:
-		vcf="results/multisample.freebayes.filtOnCtr.vep.vcf.gz",
+		vcf="results/multisample.freebayes.vep.vcf.gz",
+		tbi="results/multisample.freebayes.vep.vcf.gz.tbi",
+		html="results/multisample.freebayes.vep.html"
 	output:
-		tsv="results/multisample.freebayes.filtOnCtr.vep.tmp01.tsv"
+		"results/multisample.freebayes.vep.tmp01.tsv"
 	threads: 1 
 	log:
 		"logs/split_vep_freebayes_multisample.log"
@@ -129,39 +136,77 @@ rule split_vep_freebayes_multisample:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%FREQ][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RO\t%AO\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 # BCFTOOLS 
+
 rule split_vep_bcftools_single_sample:
 	input:
 		vcf="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.html",
 	output:
-		tsv="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.tmp.tsv"
-	threads:
-		config["threads"]
+		"results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.tmp01.tsv"
+	threads: 1
 	log:
 		"logs/{sample}.split_vep_bcftools_single_sample.log"
 	conda:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%FREQ][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 rule split_vep_bcftools_multisample:
 	input:
-		vcf="results/multisample.bcftools.filtOnCtr.vep.vcf.gz",
+		vcf="results/multisample.bcftools.vep.vcf.gz",
+		tbi="results/multisample.bcftools.vep.vcf.gz.tbi",
+		html="results/multisample.bcftools.vep.html"
 	output:
-		tsv="results/multisample.bcftools.filtOnCtr.vep.tmp.tsv"
-	threads:
-		config["threads"]
+		"results/multisample.bcftools.vep.tmp01.tsv"
+	threads: 1
 	log:
 		"logs/split_vep_bcftools_multisample.log"
 	conda:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%FREQ][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
+# VARSCAN 
+
+rule split_vep_varscan_single_sample:
+	input:
+		vcf="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vep.html",
+	output:
+		"results/{sample}_tumor/{sample}.varscan.filtOnCtr.vep.tmp01.tsv"
+	threads: 1
+	log:
+		"logs/{sample}.split_vep_varscan_single_sample.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"""
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		"""
+
+rule split_vep_varscan_multisample:
+	input:
+		vcf="results/multisample.varscan.vep.vcf.gz",
+		tbi="results/multisample.varscan.vep.vcf.gz.tbi",
+		html="results/multisample.varscan.vep.html"
+	output:
+		"results/multisample.varscan.vep.tmp01.tsv"
+	threads: 1
+	log:
+		"logs/split_vep_varscan_multisample.log"
+	conda:
+		"../envs/bcftools.yaml"
+	shell:
+		"""
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		"""

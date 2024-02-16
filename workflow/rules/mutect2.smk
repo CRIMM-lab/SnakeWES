@@ -200,7 +200,7 @@ rule clean_filter_mutect_tumor_output:
 		"../envs/bcftools.yaml"
 	shell:	
 		"""
-		bcftools view -Ov -i'FILTER == "PASS"' {input} |
+		bcftools view -Ov -i'FILTER == "PASS" || FILTER == "germline" & POPAF > 2' {input} |
 		grep -v -f {params.excl} | 
 		bcftools norm -m - -f {params.ref} | 
 		bcftools view -i "FORMAT/DP[0] >= {params.depth} & FORMAT/AD[0:1] >= {params.alt} & FORMAT/AF >= {params.vaf}" -Oz -o {output.vcf} &&
@@ -226,7 +226,7 @@ rule clean_filter_mutect_control_output:
 		"../envs/bcftools.yaml"
 	shell:	
 		"""
-		bcftools view -Ov -i'FILTER == "PASS"' {input} |
+		bcftools view -Ov -i'FILTER == "PASS" || FILTER == "germline" & POPAF > 2' {input} |
 		grep -v -f {params.excl} | 
 		bcftools norm -m - -f {params.ref} | 
 		bcftools view -i "FORMAT/DP[0] >= {params.depth} & FORMAT/AD[0:1] >= {params.alt} & FORMAT/AF >= {params.vaf}" -Oz -o {output.vcf} &&

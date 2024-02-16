@@ -40,49 +40,50 @@ rule freebayes_add_af_samples:
 	input:
 		"results/{sample}_tumor/{sample}.freebayes.vcf.gz"
 	output:
-		"results/{sample}_tumor/{sample}.freebayes.annotAF.vcf.gz"
+		vcf="results/{sample}_tumor/{sample}.freebayes.annotAF.vcf.gz",
+		tsv="results/{sample}_tumor/{sample}.freebayes.annot.tsv.gz",
+		tsv_tbi="results/{sample}_tumor/{sample}.freebayes.annot.tsv.gz.tbi"
 	message:
 		"freebayes add AF on tumor {wildcards.sample}"
 	benchmark:
-		"benchmarks/{sample}.freebayesAddAFtumor.txt"
+		"benchmarks/{sample}.freebayes_add_af_samples.txt"
 	log:
-		"logs/{sample}.freebayesAddAFtumor.log",
+		"logs/{sample}.freebayes_add_af_samples.log",
 	threads: 1
 	conda:
 		"../envs/bcftools.yaml"
-	params:
-		"results/{sample}_tumor/{sample}.freebayes.annotAF.tsv.gz"
 	shell:
 		"""
 		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t%RO\t%AO\n' {input} 2> {log} | 
-		awk 'OFS=FS="\t"''{{print $1,$2,$3,$4,$6/($5 + $6)}}' | bgzip -c > {params} 2>> {log} && 
-		tabix -b2 -e2 {params} && bcftools annotate -a {params} --columns CHROM,POS,REF,ALT,AF {input} -Oz -o {output} 2>> {log} && 
-		rm {params}
+		awk 'OFS=FS="\t"''{{print $1,$2,$3,$4,$6/($5 + $6)}}' | bgzip -c > {output.tsv} 2>> {log} && 
+		tabix -b2 -e2 {output.tsv} && 
+		bcftools annotate -x INFO/AF -a {output.tsv} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF -Oz -o {output.vcf} {input} 2>> {log}  
 		"""
 
-rule freebayes_add_af_control:
+rule freebayes_add_af_controls:
 	input:
 		"results/{sample}_control/{sample}.freebayes.vcf.gz"
 	output:
-		"results/{sample}_control/{sample}.freebayes.annotAF.vcf.gz"
+		vcf="results/{sample}_control/{sample}.freebayes.annotAF.vcf.gz",
+		tsv="results/{sample}_control/{sample}.freebayes.annot.tsv.gz",
+		tsv_tbi="results/{sample}_control/{sample}.freebayes.annot.tsv.gz.tbi"
 	message:
 		"freebayes add AF on control {wildcards.sample}"
 	benchmark:
-		"benchmarks/{sample}.freebayesAddAFcontrol.txt"
+		"benchmarks/{sample}.freebayes_add_af_controls.txt"
 	log:
-		"logs/{sample}.freebayesAddAFcontrol.log",
+		"logs/{sample}.freebayes_add_af_controls.log",
 	threads: 1
 	conda:
 		"../envs/bcftools.yaml"
-	params:
-		"results/{sample}_control/{sample}.freebayes.annotAF.tsv.gz"
 	shell:
 		"""
-		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t%RO\t%AO\n' {input} 2>{log} | 
-		awk 'OFS=FS="\t"''{{print $1,$2,$3,$4,$6/($5 + $6)}}' | bgzip -c > {params} 2>>{log} && 
-		tabix -b2 -e2 {params} && bcftools annotate -a {params} --columns CHROM,POS,REF,ALT,AF {input} -Oz -o {output} 2>>{log} && 
-		rm {params}
+		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t%RO\t%AO\n' {input} 2> {log} | 
+		awk 'OFS=FS="\t"''{{print $1,$2,$3,$4,$6/($5 + $6)}}' | bgzip -c > {output.tsv} 2>> {log} && 
+		tabix -b2 -e2 {output.tsv} && 
+		bcftools annotate -x INFO/AF -a {output.tsv} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF -Oz -o {output.vcf} {input} 2>> {log}  
 		"""
+
 
 rule freebayes_filter_samples: 
 	input:
@@ -104,7 +105,7 @@ rule freebayes_filter_samples:
 		vaf=config['filtering_tumors']['vaf'],
 		alt=config['filtering_tumors']['alt_depth']
 	shell:
-		"bcftools view -i 'QUAL > 1 & INFO/DP >= {params.depth} & INFO/AF >= {params.vaf} & INFO/AC >= {params.alt}' {input} 2> {log}| "
+		"bcftools view -i 'QUAL > 1 & INFO/DP >= {params.depth} & FORMAT/AF >= {params.vaf} & INFO/AC >= {params.alt}' {input} 2> {log}| "
 		"grep -v -f {params.excl} 2>> {log} | "
 		"bcftools sort -Oz -o {output} 2>> {log} && "
 		"tabix -p vcf {output} 2>> {log}"
@@ -130,7 +131,7 @@ rule freebayes_filter_control:
 		vaf=config['filtering_controls']['vaf'],
 		alt=config['filtering_controls']['alt_depth']
 	shell:
-		"bcftools view -i 'QUAL > 1 & INFO/DP >= {params.depth} & INFO/AF >= {params.vaf} & INFO/AC >= {params.alt}' {input} 2> {log}| "
+		"bcftools view -i 'QUAL > 1 & INFO/DP >= {params.depth} & FORMAT/AF >= {params.vaf} & INFO/AC >= {params.alt}' {input} 2> {log}| "
 		"grep -v -f {params.excl} 2>> {log}| "
 		"bcftools sort -Oz -o {output.vcf} 2>> {log} && "
 		"tabix -p vcf {output.vcf}"

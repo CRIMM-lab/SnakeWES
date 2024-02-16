@@ -56,7 +56,7 @@ rule bcftools_add_af_field_on_controls:
 		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t[%AD{{0}}\t%AD{{1}}]' {input} | 
 		awk 'OFS=FS="\t"''{{print $1,$2,$3,$4,$6/($5 + $6)}}' | bgzip -c > {output.tsv} && 
 		tabix -b2 -e2 {output.tsv} && 
-		bcftools annotate -a {output.tsv} -h <(echo '##INFO=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,AF {input} -Oz -o {output.vcf}
+		bcftools annotate -a {output.tsv} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF {input} -Oz -o {output.vcf}
 		"""
 
 rule bcftools_add_af_field_on_tumors:  
@@ -76,7 +76,7 @@ rule bcftools_add_af_field_on_tumors:
 		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t[%AD{{0}}\t%AD{{1}}]' {input} | 
 		awk 'OFS=FS="\t"''{{print $1,$2,$3,$4,$6/($5 + $6)}}' | bgzip -c > {output.tsv} && 
 		tabix -b2 -e2 {output.tsv} && 
-		bcftools annotate -a {output.tsv} -h <(echo '##INFO=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,AF {input} -Oz -o {output.vcf}
+		bcftools annotate -a {output.tsv} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF {input} -Oz -o {output.vcf}
 		"""
 
 rule bcftools_filter_controls: 
@@ -96,7 +96,7 @@ rule bcftools_filter_controls:
 	log:
 		"logs/{sample}.bcftools.filter.log"
 	shell:
-		"bcftools view -i'FORMAT/DP >= {params.depth} & INFO/AF >= {params.vaf} & FORMAT/AD[0:1] >= {params.alt}' {input} | "
+		"bcftools view -i'FORMAT/DP >= {params.depth} & FORMAT/AF >= {params.vaf} & FORMAT/AD[0:1] >= {params.alt}' {input} | "
 		"grep -v -f {params.excl} | "
 		"bcftools sort -Oz -o {output.vcf} 2> {log} && "
 		"tabix -p vcf {output.vcf}"
@@ -119,7 +119,7 @@ rule bcftools_filter_tumors:
 	log:
 		"logs/{sample}.bcftools.filter.log"
 	shell:
-		"bcftools view -i 'FORMAT/DP >= {params.depth} & INFO/AF >= {params.vaf} & FORMAT/AD[0:1] >= {params.alt}' {input} | "
+		"bcftools view -i 'FORMAT/DP >= {params.depth} & FORMAT/AF >= {params.vaf} & FORMAT/AD[0:1] >= {params.alt}' {input} | "
 		"grep -v -f {params.excl} | "
 		"bcftools sort -Oz -o {output.vcf} 2> {log} && "
 		"tabix -p vcf {output.vcf}"
@@ -171,5 +171,6 @@ rule merge_bcftools_samples_variants:
 	log: 
 		"logs/multisample.bcftools.log"
 	shell:
-		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} &&"
+		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} && "
 		"tabix -p vcf {output.vcf}"
+

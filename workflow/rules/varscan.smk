@@ -150,36 +150,37 @@ rule varscan_mod_AF_controls:
 	input:
 		"results/{sample}_control/{sample}.varscan.concat.tmp.vcf.gz"
 	output:
-		"results/{sample}_control/{sample}.varscan.concat.vcf.gz"
-	params:
-		"results/{sample}_control/{sample}.annot.tsv.gz"
+		vcf="results/{sample}_control/{sample}.varscan.concat.vcf.gz",
+		tsv="results/{sample}_control/{sample}.varscan.annot.tsv.gz",
+		tsv_tbi=temp("results/{sample}_control/{sample}.varscan.annot.tsv.gz.tbi")
 	log:
 		"logs/{sample}.varscan_mod_AF_controls.log"
 	conda:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t[%FREQ]' {input} | awk -F'\t' 'BEGIN {{OFS="\t"}} {{ $5 = $5 / 100; print }}'| bgzip -c > {params} && 
-		tabix -b2 -e2 {params} &&
-		bcftools annotate -x FORMAT/FREQ -a {params} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF  {input} -Oz -o {output}
+		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t[%FREQ]' {input} | 
+		awk -F'\t' 'BEGIN {{OFS="\t"}} {{ $5 = $5 / 100; print }}'| bgzip -c > {output.tsv} && 
+		tabix -b2 -e2 {output.tsv} &&
+		bcftools annotate -x FORMAT/FREQ -a {output.tsv} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF  {input} -Oz -o {output.vcf}
 		"""
 
 rule varscan_mod_AF_tumors:
 	input:
 		"results/{sample}_tumor/{sample}.varscan.concat.tmp.vcf.gz"
 	output:
-		"results/{sample}_tumor/{sample}.varscan.concat.vcf.gz"
-	params:
-		"results/{sample}_tumor/{sample}.annot.tsv.gz"
+		vcf="results/{sample}_tumor/{sample}.varscan.concat.vcf.gz",
+		tsv="results/{sample}_tumor/{sample}.varscan.annot.tsv.gz",
+		tsv_tbi="results/{sample}_tumor/{sample}.varscan.annot.tsv.gz.tbi"
 	log:
 		"logs/{sample}.varscan_mod_AF_tumors.log"
 	conda:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t[%FREQ]' {input} | awk -F'\t' 'BEGIN {{OFS="\t"}} {{ $5 = $5 / 100; print }}'| bgzip -c > {params} && 
-		tabix -b2 -e2 {params} &&
-		bcftools annotate -x FORMAT/FREQ -a {params} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF  {input} -Oz -o {output}
+		bcftools query -f'%CHROM\t%POS\t%REF\t%ALT\t[%FREQ]' {input} | awk -F'\t' 'BEGIN {{OFS="\t"}} {{ $5 = $5 / 100; print }}'| bgzip -c > {output.tsv} && 
+		tabix -b2 -e2 {output.tsv} &&
+		bcftools annotate -x FORMAT/FREQ -a {output.tsv} -h <(echo '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">') --columns CHROM,POS,REF,ALT,FORMAT/AF  {input} -Oz -o {output.vcf}
 		"""
 
 rule varscan_reheader_controls:
@@ -238,7 +239,7 @@ rule filter_varscan_controls_vars:
 		"benchmarks/{sample}.filter.varscan.txt"
 	threads: 1
 	params:
-		chr_to_exclude=config["chr_to_exclude"],
+		excl=config["chr_to_exclude"],
 		alt=config["filtering_controls"]["alt_depth"],
 		min_depth=config["filtering_controls"]["min_depth"],
 		vaf=config["filtering_controls"]["vaf"],
@@ -248,7 +249,7 @@ rule filter_varscan_controls_vars:
 		"logs/{sample}.filter.varscan.log"
 	shell:
 		"bcftools view -Ov -i 'FORMAT/DP >= {params.min_depth} & FORMAT/AD >= {params.alt} & FORMAT/AF >= {params.vaf}' {input} |"
-		"grep -v -f {params.chr_to_exclude} |"
+		"grep -v -f {params.excl} |"
 		"bcftools sort -Oz -o {output.vcf} 2> {log} &&"
 		"tabix -f -p vcf {output.vcf}"
 
@@ -256,14 +257,15 @@ rule filter_varscan_tumors_vars:
 	input:
 		"results/{sample}_tumor/{sample}.varscan.vcf.gz"
 	output:
-		"results/{sample}_tumor/{sample}.varscan.filt.vcf.gz"
+		vcf="results/{sample}_tumor/{sample}.varscan.filt.vcf.gz"
+		tbi="results/{sample}_tumor/{sample}.varscan.filt.vcf.gz.tbi"
 	message:
 		"filter varscan tumor vars - tumor {wildcards.sample}"
 	benchmark:
 		"benchmarks/{sample}.filter.varscan.txt"
 	threads: 1
 	params:
-		chr_to_exclude=config["chr_to_exclude"],
+		excl=config["chr_to_exclude"],
 		alt=config["filtering_tumors"]["alt_depth"],
 		min_depth=config["filtering_tumors"]["min_depth"],
 		vaf=config["filtering_tumors"]["vaf"],
@@ -273,9 +275,9 @@ rule filter_varscan_tumors_vars:
 		"logs/{sample}.filter.varscan.log"
 	shell:
 		"bcftools view -Ov -i'FORMAT/DP >= {params.min_depth} & FORMAT/AD >= {params.alt} & FORMAT/AF >= {params.vaf}' {input} | "
-		"grep -v -f {params.chr_to_exclude} | "
-		"bcftools sort -Oz -o {output} && "
-		"tabix -f -p vcf {output}"
+		"grep -v -f {params.excl} | "
+		"bcftools sort -Oz -o {output.vcf} && "
+		"tabix -f -p vcf {output.vcf}"
 
 rule merge_varscan_controls_variants:
 	input:
@@ -339,3 +341,5 @@ rule merge_varscan_tumors_variants: ## difference between single curly and doucl
 	shell:
 		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2> {log} &&"
 		"tabix -p vcf {output.vcf}"
+
+

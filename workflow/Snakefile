@@ -10,7 +10,6 @@ include: "rules/vep.smk"
 #include: "rules/freebayes.smk"
 #include: "rules/varscan.smk"
 #include: "rules/bcftools.smk"
-#include: "rules/pureCN.smk"
 
 if config["run_mode"] == "PoN":
 
@@ -29,6 +28,16 @@ if config["run_mode"] == "PoN":
 			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
 			expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
 
+	rule PoNOneSample:
+		input:
+			expand(f"qc/{{sample}}_tumor_{{strand}}_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_control_{{strand}}_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_tumor_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_control_{{strand}}_tr_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
+			expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+
 	rule PureCN:
 		input:
 			expand(f"alignments/{{sample}}.tumor.coveragePureCN.loess.txt", sample=config["samples"].values()),
@@ -40,7 +49,7 @@ elif config["run_mode"] == "nocontrol":
 
 	include: "rules/nocontrol.smk"
 	
-	rule nocontrols:
+	rule Nocontrols:
 		input:
 			expand(f"qc/{{sample}}_tumor_{{strand}}_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}_tumor_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
@@ -49,6 +58,14 @@ elif config["run_mode"] == "nocontrol":
 			expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
 			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filt.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
 			expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
+
+	rule NocontrolsOneSample:
+		input:
+			expand(f"qc/{{sample}}_tumor_{{strand}}_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
+			expand(f"qc/{{sample}}_tumor_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
+			expand(f"alignments/{{sample}}.tumor.dd.rec.bam", sample=config["samples"].values()),
+			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filt.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
 
 elif config["run_mode"] == "paired":
 

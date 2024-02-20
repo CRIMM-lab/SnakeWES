@@ -347,12 +347,11 @@ rule ParseAnnotationVepVarScan:
 	shell:
 		"""
 		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%GT\t%RD\t%AD\t%FREQ]\n" -d -A tab > {output} 2>{log}
-<<<<<<< HEAD
-		"""
-=======
 		"""
 
+
 #######################################################################################   One Sample Paired Analysis   #######################################################################################
+
 rule ParseAnnotationVepMutect2SingleSample:
 	input:
 		"results/{sample}.mutect2.paired.filtered.vep.vcf.gz"
@@ -388,4 +387,3 @@ rule ParseAnnotationVepVarScanSingleSample:
 		"""
 		cat {params.header} <(bcftools view -s {params.sample} {input} |bcftools +split-vep -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ\t[%GT\t%RD\t%AD\t%FREQ]\n" -d -A tab) > {output} 2>{log}
 		"""
->>>>>>> 100f8aa541bc5a1f50688beb3321262f26d176c5

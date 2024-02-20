@@ -2,11 +2,11 @@ configfile: "config/conf.yaml"
 
 include: "rules/fastqc.smk"
 include: "rules/trim.smk"
+#include: "rules/depth.smk"
 include: "rules/align.smk"
 include: "rules/alfred.smk"
 include: "rules/vep.smk"
 #include: "rules/mutect2.smk"
-#include: "rules/depth.smk"
 #include: "rules/freebayes.smk"
 #include: "rules/varscan.smk"
 #include: "rules/bcftools.smk"
@@ -14,45 +14,41 @@ include: "rules/vep.smk"
 
 if config["run_mode"] == "PoN":
 
-	rule controls:
+	include: "rules/PoN.smk"
+	include: "rules/pureCN.smk"
+
+	rule PoN:
 		input:
 			expand(f"qc/{{sample}}_tumor_{{strand}}_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}_control_{{strand}}_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}_tumor_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}_control_{{strand}}_tr_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
-			expand(f"alignments/{{sample}}.tumor.dd.rec.bam", sample=config["samples"].values()),
-			expand(f"alignments/{{sample}}.control.dd.rec.bam", sample=config["controls"].values()),
 			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
 			expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values()),
-			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
-			expand(f"results/{{sample}}_control/{{sample}}.{{caller}}.filt.vcf.gz", sample=config["controls"].values(), caller=config["callers"].values()),
 			expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
+
+	rule PureCN:
+		input:
 			expand(f"alignments/{{sample}}.tumor.coveragePureCN.loess.txt", sample=config["samples"].values()),
 			expand(f"alignments/{{sample}}.control.coveragePureCN.loess.txt", sample=config["controls"].values()),
 			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.tmp01.tsv", sample=config["samples"].values(), caller=config["callers"].values()),
 			expand(f"results/multisample.{{caller}}.vep.tmp01.tsv", caller=config["callers"].values()) 
-			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
-			#expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
-
 
 elif config["run_mode"] == "nocontrol":
 
-	#include: "rules/nocontrol.smk"
+	include: "rules/nocontrol.smk"
 	
 	rule nocontrols:
 		input:
 			expand(f"qc/{{sample}}_tumor_{{strand}}_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}_tumor_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), strand=config["strand"].values()),
 			expand(f"alignments/{{sample}}.tumor.dd.rec.bam", sample=config["samples"].values()),
-			#expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
-			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
-			#expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
-			#expand(f"alignments/{{sample}}.tumor.coveragePureCN.loess.txt", sample=config["samples"].values()),
-			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.tmp01.tsv", sample=config["samples"].values(), caller=config["callers"].values()),
-			#expand(f"results/multisample.{{caller}}.vep.tmp01.tsv", caller=config["callers"].values()) 
-			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
-			#expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
-
+			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
+			expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filt.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
 
 elif config["run_mode"] == "paired":
 
@@ -63,14 +59,14 @@ elif config["run_mode"] == "paired":
 			expand(f"qc/{{sample}}_{{type}}_{{strand}}_fastqc.html", sample=config["samples"].values(), type=config["paired"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}_{{type}}_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), type=config["paired"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}.{{type}}.qc.tsv.gz.pdf", sample=config["samples"].values(),type=config["paired"].values()),
-			expand(f"results/{{sample}}.varscan.paired.snp.vcf.gz.tbi",sample=config["samples"].values()),
-			expand(f"results/{{sample}}.varscan.paired.indel.vcf.gz.tbi",sample=config["samples"].values()),
-			expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["samples"].values()),
-			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["samples"].values()),
-			expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values()),
-			f"results/multisample.mutect2.paired.vep.vcf.gz",
-			f"results/multisample.varscan.paired.vep.vcf.gz",
-			f"results/multisample.varscan.paired.vep.formatted.vcf.gz",
+			#expand(f"results/{{sample}}.varscan.paired.snp.vcf.gz.tbi",sample=config["samples"].values()),
+			#expand(f"results/{{sample}}.varscan.paired.indel.vcf.gz.tbi",sample=config["samples"].values()),
+			#expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["samples"].values()),
+			#expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["samples"].values()),
+			#expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values()),
+			#f"results/multisample.mutect2.paired.vep.vcf.gz",
+			#f"results/multisample.varscan.paired.vep.vcf.gz",
+			#f"results/multisample.varscan.paired.vep.formatted.vcf.gz",
 			f"results/multisample.mutect2.paired.tmp.tsv",
 			f"results/multisample.varscan.paired.tmp.tsv"
 

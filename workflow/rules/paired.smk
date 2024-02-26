@@ -357,7 +357,7 @@ rule ParseAnnotationVepMutect2:
 		""
 	shell:
 		"""
-		bcftools +split-vep {input} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ\t[%GT\t%RD\t%AD\t%FREQ]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ\t[%GT\t%AD\t%AF]\n" -d -A tab > {output} 2>{log}
 		"""
 
 rule ParseAnnotationVepVarScan:

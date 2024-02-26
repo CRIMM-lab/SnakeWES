@@ -24,9 +24,9 @@ if config["run_mode"] == "PoN":
 			expand(f"qc/{{sample}}_control_{{strand}}_tr_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
 			expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values()),
-			expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
-			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
-			expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
+			#expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
+			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			#expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
 
 	rule PoNOneSample:
 		input:
@@ -36,7 +36,7 @@ if config["run_mode"] == "PoN":
 			expand(f"qc/{{sample}}_control_{{strand}}_tr_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
 			expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values()),
-			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
 
 	rule PureCN:
 		input:
@@ -84,8 +84,8 @@ elif config["run_mode"] == "paired":
 			#f"results/multisample.mutect2.paired.vep.vcf.gz",
 			#f"results/multisample.varscan.paired.vep.vcf.gz",
 			#f"results/multisample.varscan.paired.vep.formatted.vcf.gz",
-			f"results/multisample.mutect2.paired.tmp.tsv",
-			f"results/multisample.varscan.paired.tmp.tsv"
+			#f"results/multisample.mutect2.paired.vep.vcf.gz",
+			f"results/multisample.varscan.paired.vep.vcf.gz"
 
 	rule pairedOneSample:
 		input:

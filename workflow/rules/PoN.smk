@@ -256,8 +256,8 @@ rule RemoveMutect2ControlVarsPoN:
 		PoN_vcf="results/custom_pon.mutect2.vcf.gz",
 		PoN_tbi="results/custom_pon.mutect2.vcf.gz.tbi"
 	output:
-		vcf=temp("results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vcf.gz"),
-		tbi=temp("results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vcf.gz.tbi")
+		vcf=temp("results/{sample}_tumor/{sample}.mutect2.filtOnCtrs.vcf.gz"),
+		tbi=temp("results/{sample}_tumor/{sample}.mutect2.filtOnCtrs.vcf.gz.tbi")
 	threads: 1
 	log:
 		"logs/{sample}.RemoveMutect2ControlVarsPoN.log"
@@ -270,14 +270,14 @@ rule RemoveMutect2ControlVarsPoN:
 
 rule MergeMutect2TumorOutputPoN:
 	input:
-		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtOnCtr.vcf.gz", sample=config["samples"].values()),
-		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtOnCtr.vcf.gz.tbi", sample=config["samples"].values())
+		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtOnCtrs.vcf.gz", sample=config["samples"].values()),
+		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtOnCtrs.vcf.gz.tbi", sample=config["samples"].values())
 	output:
 		vcf="results/multisample.mutect2.vcf.gz",
 		tbi="results/multisample.mutect2.vcf.gz.tbi"
 	threads: 1
 	log:
-		"logs/merge_mutect2_tumor_output.log"
+		"logs/MergeMutect2TumorOutputPoN.log"
 	conda:
 		"../envs/bcftools.yaml"
 	shell:

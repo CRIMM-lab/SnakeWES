@@ -235,9 +235,10 @@ rule NormVarscanPaired:
 	conda:
 		"../envs/bcftools.yaml"
 	params:
-		genome=config["genome"]
+		genome=config["genome"],
+		txt="results/{sample}.rh.txt"
 	shell:
-		"bcftools view -f PASS {input} |bcftools norm -m - -f {params.genome} -O z -o {output} - 2>{log}"
+		"echo {wildcards.sample}_germline > {params.txt} && echo {wildcards.sample}_tumor >> {params.txt} && bcftools view -f PASS {input} |bcftools reheader -s {params.txt} |bcftools norm -m - -f {params.genome} -O z -o {output} - 2>{log}"
 
 
 #######################################################################################   VEP   #######################################################################################
@@ -347,7 +348,7 @@ rule ParseAnnotationVepMutect2:
 	input:
 		"results/multisample.mutect2.paired.vep.vcf.gz"
 	output:
-		"results/multisample.mutect2.paired.tmp.tsv"
+		"results/multisample.mutect2.paired.tmp01.tsv"
 	threads: 1
 	log:
 		"logs/ParseAnnotationVepMutect2.log"
@@ -364,7 +365,7 @@ rule ParseAnnotationVepVarScan:
 	input:
 		"results/multisample.varscan.paired.vep.vcf.gz"
 	output:
-		f"results/multisample.varscan.paired.tmp.tsv"
+		f"results/multisample.varscan.paired.tmp01.tsv"
 	threads: 1
 	log:
 		"logs/ParseAnnotationVepVarScan.log"

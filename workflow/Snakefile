@@ -24,7 +24,8 @@ if config["run_mode"] == "PoN":
 			expand(f"qc/{{sample}}_control_{{strand}}_tr_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
 			expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values()),
-			#expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
+			expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
+			expand(f"results/multisample.{{caller}}.vep.tmp01.tsv", caller=config["callers"].values())
 			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
 			#expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
 
@@ -36,7 +37,8 @@ if config["run_mode"] == "PoN":
 			expand(f"qc/{{sample}}_control_{{strand}}_tr_fastqc.html", sample=config["controls"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
 			expand(f"qc/{{sample}}.control.qc.tsv.gz.pdf", sample=config["controls"].values()),
-			#expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtr.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtrs.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filtOnCtrs.vep.tmp01.tsv", sample=config["samples"].values(), caller=config["callers"].values())
 
 	rule PureCN:
 		input:
@@ -58,6 +60,7 @@ elif config["run_mode"] == "nocontrol":
 			expand(f"results/multisample.{{caller}}.vcf.gz", caller=config["callers"].values()),
 			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filt.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
 			expand(f"results/multisample.{{caller}}.vep.vcf.gz", caller=config["callers"].values()),
+			expand(f"results/multisample.{{caller}}.vep.tmp01.tsv", caller=config["callers"].values())
 
 	rule NocontrolsOneSample:
 		input:
@@ -66,6 +69,7 @@ elif config["run_mode"] == "nocontrol":
 			expand(f"alignments/{{sample}}.tumor.dd.rec.bam", sample=config["samples"].values()),
 			expand(f"qc/{{sample}}.tumor.qc.tsv.gz.pdf", sample=config["samples"].values()),
 			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filt.vep.vcf.gz", sample=config["samples"].values(), caller=config["callers"].values()),
+			expand(f"results/{{sample}}_tumor/{{sample}}.{{caller}}.filt.vep.tmp01.tsv", sample=config["samples"].values(), caller=config["callers"].values())
 
 elif config["run_mode"] == "paired":
 
@@ -76,6 +80,10 @@ elif config["run_mode"] == "paired":
 			expand(f"qc/{{sample}}_{{type}}_{{strand}}_fastqc.html", sample=config["samples"].values(), type=config["paired"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}_{{type}}_{{strand}}_tr_fastqc.html", sample=config["samples"].values(), type=config["paired"].values(), strand=config["strand"].values()),
 			expand(f"qc/{{sample}}.{{type}}.qc.tsv.gz.pdf", sample=config["samples"].values(),type=config["paired"].values()),
+			expand(f"results/{{sample}}.varscan.paired.norm.vcf.gz", sample=config["samples"].values()),
+			expand(f"results/{{sample}}.mutect2.paired.filtered.norm.vcf.gz", sample=config["samples"].values()),
+			f"results/multisample.mutect2.paired.tmp01.tsv",
+			f"results/multisample.varscan.paired.tmp01.tsv"
 			#expand(f"results/{{sample}}.varscan.paired.snp.vcf.gz.tbi",sample=config["samples"].values()),
 			#expand(f"results/{{sample}}.varscan.paired.indel.vcf.gz.tbi",sample=config["samples"].values()),
 			#expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["samples"].values()),
@@ -83,9 +91,8 @@ elif config["run_mode"] == "paired":
 			#expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values()),
 			#f"results/multisample.mutect2.paired.vep.vcf.gz",
 			#f"results/multisample.varscan.paired.vep.vcf.gz",
-			#f"results/multisample.varscan.paired.vep.formatted.vcf.gz",
 			#f"results/multisample.mutect2.paired.vep.vcf.gz",
-			f"results/multisample.varscan.paired.vep.vcf.gz"
+			#f"results/multisample.varscan.paired.vep.vcf.gz"
 
 	rule pairedOneSample:
 		input:
@@ -97,8 +104,8 @@ elif config["run_mode"] == "paired":
 			expand(f"results/{{sample}}.varscan.paired.vcf.gz", sample=config["samples"].values()),
 			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["samples"].values()),
 			expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values()),
-			expand(f"results/{{sample}}.mutect2.paired.filtered.vep.tsv", sample=config["samples"].values()),
-			expand(f"results/{{sample}}.varscan.paired.vep.tsv", sample=config["samples"].values())
+			#expand(f"results/{{sample}}.mutect2.paired.filtered.vep.tsv", sample=config["samples"].values()),
+			#expand(f"results/{{sample}}.varscan.paired.vep.tsv", sample=config["samples"].values())
 
 
 else:

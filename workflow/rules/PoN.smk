@@ -434,8 +434,8 @@ rule BcftoolsRemoveControlsPoN:
 		custom_pon="results/custom_pon.bcftools.vcf.gz",
 		pon_tbi="results/custom_pon.bcftools.vcf.gz.tbi"
 	output:
-		vcf="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vcf.gz",
-		tbi="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vcf.gz.tbi"
+		vcf="results/{sample}_tumor/{sample}.bcftools.filtOnCtrs.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.bcftools.filtOnCtrs.vcf.gz.tbi"
 	threads: 1
 	conda:
 		"../envs/bcftools.yaml"
@@ -448,8 +448,8 @@ rule BcftoolsRemoveControlsPoN:
 
 rule MergeBcftoolsTumorVariantsPoN: 
 	input:
-		vcf=expand("results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vcf.gz", sample=config['samples'].values()),
-		tbi=expand("results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vcf.gz.tbi", sample=config['samples'].values())
+		vcf=expand("results/{sample}_tumor/{sample}.bcftools.filtOnCtrs.vcf.gz", sample=config['samples'].values()),
+		tbi=expand("results/{sample}_tumor/{sample}.bcftools.filtOnCtrs.vcf.gz.tbi", sample=config['samples'].values())
 	output:
 		vcf="results/multisample.bcftools.vcf.gz",
 		tbi="results/multisample.bcftools.vcf.gz.tbi"
@@ -737,8 +737,8 @@ rule RemoveVarscanControlsVarsPoN:
 		custom_pon="results/custom_pon.varscan.vcf.gz",
 		tbi="results/custom_pon.varscan.vcf.gz.tbi"
 	output:
-		vcf="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vcf.gz",
-		tbi="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vcf.gz.tbi"
+		vcf="results/{sample}_tumor/{sample}.varscan.filtOnCtrs.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.varscan.filtOnCtrs.vcf.gz.tbi"
 	threads: 1
 	conda:
 		"../envs/bcftools.yaml"
@@ -751,8 +751,8 @@ rule RemoveVarscanControlsVarsPoN:
 
 rule MergeVarscanTumorsVariantsPoN: ## difference between single curly and doucle curly brackets ##
 	input:
-		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz", sample=config['samples'].values()),
-		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtr.vcf.gz.tbi", sample=config['samples'].values())
+		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtrs.vcf.gz", sample=config['samples'].values()),
+		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.varscan.filtOnCtrs.vcf.gz.tbi", sample=config['samples'].values())
 	output:
 		vcf="results/multisample.varscan.vcf.gz",
 		tbi="results/multisample.varscan.vcf.gz.tbi"
@@ -909,8 +909,8 @@ rule FreebayesRemoveControlVarsPoN:
 		PoN="results/customPoN.freebayes.vcf.gz",
 		tbi="results/customPoN.freebayes.vcf.gz.tbi"
 	output:
-		vcf="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vcf.gz",
-		tbi="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vcf.gz.tbi"
+		vcf="results/{sample}_tumor/{sample}.freebayes.filtOnCtrs.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.freebayes.filtOnCtrs.vcf.gz.tbi"
 	threads: 1
 	conda:
 		"../envs/bcftools.yaml"
@@ -922,8 +922,8 @@ rule FreebayesRemoveControlVarsPoN:
 
 rule MergeFreebayesTumorOutputPoN:
 	input:
-		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.freebayes.filtOnCtr.vcf.gz", sample=config["samples"].values()),
-		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.freebayes.filtOnCtr.vcf.gz.tbi", sample=config["samples"].values())
+		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.freebayes.filtOnCtrs.vcf.gz", sample=config["samples"].values()),
+		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.freebayes.filtOnCtrs.vcf.gz.tbi", sample=config["samples"].values())
 	output:
 		vcf="results/multisample.freebayes.vcf.gz",
 		tbi="results/multisample.freebayes.vcf.gz.tbi"
@@ -940,12 +940,12 @@ rule MergeFreebayesTumorOutputPoN:
 
 rule VepSingleSamplePoN:
 	input:
-		vcf="results/{sample}_tumor/{sample}.{caller}.filtOnCtr.vcf.gz",
+		vcf="results/{sample}_tumor/{sample}.{caller}.filtOnCtrs.vcf.gz",
 		cache=config["vepcache"]
 	output:
-		vcf="results/{sample}_tumor/{sample}.{caller}.filtOnCtr.vep.vcf.gz",  
-		tbi="results/{sample}_tumor/{sample}.{caller}.filtOnCtr.vep.vcf.gz.tbi",
-		html="results/{sample}_tumor/{sample}.{caller}.filtOnCtr.vep.html"
+		vcf="results/{sample}_tumor/{sample}.{caller}.filtOnCtrs.vep.vcf.gz",  
+		tbi="results/{sample}_tumor/{sample}.{caller}.filtOnCtrs.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.{caller}.filtOnCtrs.vep.html"
 	threads: 
 		config["threads"]
 	log:
@@ -986,11 +986,11 @@ rule VepMultisamplePoN:
 
 rule SplitVepMutect2SingleSamplePoN:
 	input:
-		vcf="results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.vcf.gz",
-		tbi="results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.vcf.gz.tbi",
-		html="results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.html",
+		vcf="results/{sample}_tumor/{sample}.mutect2.filtOnCtrs.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.mutect2.filtOnCtrs.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.mutect2.filtOnCtrs.vep.html",
 	output:
-		"results/{sample}_tumor/{sample}.mutect2.filtOnCtr.vep.tmp01.tsv"
+		"results/{sample}_tumor/{sample}.mutect2.filtOnCtrs.vep.tmp01.tsv"
 	threads: 1
 	log:
 		"logs/{sample}.SplitVepMutect2SingleSamplePoN.log"
@@ -1022,11 +1022,11 @@ rule SplitVepMutect2MultisamplePoN:
 
 rule SplitVepFreebayesSingleSamplePoN:
 	input:
-		vcf="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.vcf.gz",
-		tbi="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.vcf.gz.tbi",
-		html="results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.html",
+		vcf="results/{sample}_tumor/{sample}.freebayes.filtOnCtrs.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.freebayes.filtOnCtrs.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.freebayes.filtOnCtrs.vep.html",
 	output:
-		"results/{sample}_tumor/{sample}.freebayes.filtOnCtr.vep.tmp01.tsv"
+		"results/{sample}_tumor/{sample}.freebayes.filtOnCtrs.vep.tmp01.tsv"
 	threads:1
 	log:
 		"logs/{sample}.SplitVepFreebayesSingleSamplePoN.log"
@@ -1058,11 +1058,11 @@ rule SplitVepFreebayesMultisamplePoN:
 
 rule SplitVepBcftoolsSingleSamplePoN:
 	input:
-		vcf="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.vcf.gz",
-		tbi="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.vcf.gz.tbi",
-		html="results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.html",
+		vcf="results/{sample}_tumor/{sample}.bcftools.filtOnCtrs.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.bcftools.filtOnCtrs.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.bcftools.filtOnCtrs.vep.html",
 	output:
-		"results/{sample}_tumor/{sample}.bcftools.filtOnCtr.vep.tmp01.tsv"
+		"results/{sample}_tumor/{sample}.bcftools.filtOnCtrs.vep.tmp01.tsv"
 	threads: 1
 	log:
 		"logs/{sample}.SplitVepBcftoolsSingleSamplePoN.log"
@@ -1094,11 +1094,11 @@ rule SplitVepBcftoolsMultisamplePoN:
 
 rule SplitVepVarscanSingleSamplePoN:
 	input:
-		vcf="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vep.vcf.gz",
-		tbi="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vep.vcf.gz.tbi",
-		html="results/{sample}_tumor/{sample}.varscan.filtOnCtr.vep.html",
+		vcf="results/{sample}_tumor/{sample}.varscan.filtOnCtrs.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.varscan.filtOnCtrs.vep.vcf.gz.tbi",
+		html="results/{sample}_tumor/{sample}.varscan.filtOnCtrs.vep.html",
 	output:
-		"results/{sample}_tumor/{sample}.varscan.filtOnCtr.vep.tmp01.tsv"
+		"results/{sample}_tumor/{sample}.varscan.filtOnCtrs.vep.tmp01.tsv"
 	threads: 1
 	log:
 		"logs/{sample}.SplitVepVarscanSingleSamplePoN.log"

@@ -96,8 +96,8 @@ rule CleanFilterMutectTumorOutputNocontrol:
 	input:
 		"results/{sample}_tumor/{sample}.mutect2.filt.vcf.gz"
 	output:
-		vcf="results/{sample}_tumor/{sample}.mutect2.filtered.vcf.gz",
-		tbi="results/{sample}_tumor/{sample}.mutect2.filtered.vcf.gz.tbi"
+		vcf="results/{sample}_tumor/{sample}.mutect2.filt.vep.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.mutect2.filt.vep.vcf.gz.tbi"
 	threads: 1
 	log:
 		"logs/{sample}.CleanFilterMutectTumorOutputNocontrol.log"
@@ -120,8 +120,8 @@ rule CleanFilterMutectTumorOutputNocontrol:
 
 rule MergeMutect2TumorOutputNocontrol:
 	input:
-		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtered.vcf.gz", sample=config["samples"].values()),
-		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filtered.vcf.gz.tbi", sample=config["samples"].values())
+		vcf=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filt.vep.vcf.gz", sample=config["samples"].values()),
+		tbi=expand(f"results/{{sample}}_tumor/{{sample}}.mutect2.filt.vep.vcf.gz.tbi", sample=config["samples"].values())
 	output:
 		vcf="results/multisample.mutect2.vcf.gz",
 		tbi="results/multisample.mutect2.vcf.gz.tbi"

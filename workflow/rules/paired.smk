@@ -286,7 +286,8 @@ rule VepVarscanPaired:
 
 rule MultisamplePairedMutect2:
 	input:
-		expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz", sample=config["samples"].values())
+		vcf=expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz", sample=config["samples"].values()),
+		tbi=expand(f"results/{{sample}}.mutect2.paired.filtered.vep.vcf.gz.tbi", sample=config["samples"].values())
 	output:
 		temp("results/multisample.mutect2.paired.vep.tmp.vcf.gz")
 	threads: 1
@@ -295,11 +296,12 @@ rule MultisamplePairedMutect2:
 	conda:
 		"../envs/bcftools.yaml"
 	shell:
-		"bcftools merge -m none -O z -o {output} {input} 2>{log}"
+		"bcftools merge -m none -O z -o {output} {input.vcf} 2>{log}"
 
 rule MultisamplePairedVarscan:
 	input:
-		expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz", sample=config["samples"].values())
+		vcf=expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz", sample=config["samples"].values()),
+		tbi=expand(f"results/{{sample}}.varscan.paired.vep.vcf.gz.tbi", sample=config["samples"].values())
 	output:
 		temp("results/multisample.varscan.paired.vep.tmp.vcf.gz")
 	threads: 1
@@ -308,7 +310,7 @@ rule MultisamplePairedVarscan:
 	conda:
 		"../envs/bcftools.yaml"
 	shell:
-		"bcftools merge -m none -O z -o {output} {input} 2>{log}"
+		"bcftools merge -m none -O z -o {output} {input.vcf} 2>{log}"
 
 rule FormatMultisamplePairedMutect2:
 	input:

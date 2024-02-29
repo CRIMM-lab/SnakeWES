@@ -421,8 +421,8 @@ rule FreebayesFilterTumorNocontrol:
 	shell:
 		"bcftools view -i 'QUAL > 1 & INFO/DP >= {params.depth} & FORMAT/AF >= {params.vaf} & INFO/AC >= {params.alt}' {input} | "
 		"grep -v -f {params.excl} | "
-		"bcftools sort -Oz -o {output} 2> {log} && "
-		"tabix -p vcf {output} 2>>{log}"
+		"bcftools sort -Oz -o {output.vcf} 2> {log} && "
+		"tabix -p vcf {output.vcf} 2>>{log}"
 
 rule MergeFreebayesTumorOutputNocontrol:
 	input:

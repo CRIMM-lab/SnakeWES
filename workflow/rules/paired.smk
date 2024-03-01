@@ -79,6 +79,8 @@ rule Mutect2Paired:
 	threads: config["threads"]
 	log:
 		"logs/{sample}.mutect.paired.log"
+	conda:
+		"../envs/gatk4.yaml"
 	params:
 		ref=config["genome"],
 		interval=config["intervals"],
@@ -360,7 +362,7 @@ rule ParseAnnotationVepMutect2:
 		""
 	shell:
 		"""
-		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n"  -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ[\t%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n"  -d -A tab > {output} 2>{log}
 		"""
 
 rule ParseAnnotationVepVarScan:
@@ -377,7 +379,7 @@ rule ParseAnnotationVepVarScan:
 		""
 	shell:
 		"""
-		bcftools +split-vep {input} -f  "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input} -f  "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ[\t%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 
@@ -398,7 +400,7 @@ rule ParseAnnotationVepMutect2SingleSample:
 		header="resources/header.vep.txt"
 	shell:
 		"""
-		cat {params.header} <(bcftools view -s {params.sample} {input} |bcftools +split-vep -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n"  -d -A tab |tr "," "\t") > {output} 2>{log}
+		cat {params.header} <(bcftools view -s {params.sample} {input} |bcftools +split-vep -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ[\t%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n"  -d -A tab |tr "," "\t") > {output} 2>{log}
 		"""
 
 rule ParseAnnotationVepVarScanSingleSample:
@@ -416,5 +418,5 @@ rule ParseAnnotationVepVarScanSingleSample:
 		header="resources/header.vep.txt"
 	shell:
 		"""
-		cat {params.header} <(bcftools view -s {params.sample} {input} |bcftools +split-vep -f  "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%AF][\t%GT]\n" -d -A tab) > {output} 2>{log}
+		cat {params.header} <(bcftools view -s {params.sample} {input} |bcftools +split-vep -f  "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ[\t%RD\t%AD\t%AF][\t%GT]\n" -d -A tab) > {output} 2>{log}
 		"""

@@ -46,8 +46,8 @@ def process_row(row):
 			meeting_samples.append(sample)
 
 	# Add the meeting_samples as a comma-separated string and count after the 4th column
-	row.insert(4, ",".join(meeting_samples))
-	row.insert(5, count)
+	row.insert(7, ",".join(meeting_samples))
+	row.insert(8, count)
 
 	return row
 

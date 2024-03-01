@@ -133,9 +133,9 @@ rule baseRecalibratorTumor:
 		bai="alignments/{sample}.tumor.dd.bai",
 		ref=config['genome'],
 		dict="resources/GRCh38_full_analysis_set_plus_decoy_hla.dict",
-		known=["/home/simone/mnt/part1/resources/snpSift/hg38/dbSNP.b156.filt.vcf.gz", 
-		"/home/simone/mnt/part1/resources/snpSift/hg38/Homo_sapiens_assembly38.known_indels.vcf.gz",
-		config["gnomAD"], "/home/simone/mnt/part1/resources/snpSift/hg38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"],  # optional known sites - single or a list
+		known=["resources/dbSNP.b156.filt.vcf.gz", 
+		"resources/Homo_sapiens_assembly38.known_indels.vcf.gz",
+		config["gnomAD"], "resources/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"],  # optional known sites - single or a list
 	output:
 		recal_table="data/{sample}.tumor.recal.table",
 	benchmark:
@@ -158,9 +158,9 @@ rule baseRecalibratorControl:
 		bai="alignments/{sample}.control.dd.bai",
 		ref=config['genome'],
 		dict="resources/GRCh38_full_analysis_set_plus_decoy_hla.dict",
-		known=["/home/simone/mnt/part1/resources/snpSift/hg38/dbSNP.b156.filt.vcf.gz", 
-		"/home/simone/mnt/part1/resources/snpSift/hg38/Homo_sapiens_assembly38.known_indels.vcf.gz",
-		config["gnomAD"], "/home/simone/mnt/part1/resources/snpSift/hg38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"],  # optional known sites - single or a list
+		known=["resources/dbSNP.b156.filt.vcf.gz", 
+		"resources/Homo_sapiens_assembly38.known_indels.vcf.gz",
+		config["gnomAD"], "resources/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"],  # optional known sites - single or a list
 	output:
 		recal_table="data/{sample}.control.recal.table",
 	benchmark:
@@ -183,9 +183,9 @@ rule baseRecalibratorGermline:
 		bai="alignments/{sample}.germline.dd.bai",
 		ref=config['genome'],
 		dict="resources/GRCh38_full_analysis_set_plus_decoy_hla.dict",
-		known=["/home/simone/mnt/part1/resources/snpSift/hg38/dbSNP.b156.filt.vcf.gz", 
-		"/home/simone/mnt/part1/resources/snpSift/hg38/Homo_sapiens_assembly38.known_indels.vcf.gz",
-		config["gnomAD"], "/home/simone/mnt/part1/resources/snpSift/hg38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"],  # optional known sites - single or a list
+		known=["resources/dbSNP.b156.filt.vcf.gz", 
+		"resources/Homo_sapiens_assembly38.known_indels.vcf.gz",
+		config["gnomAD"], "resources/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"],  # optional known sites - single or a list
 	output:
 		recal_table="data/{sample}.germline.recal.table",
 	benchmark:

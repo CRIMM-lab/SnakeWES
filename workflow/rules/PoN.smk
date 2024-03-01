@@ -998,7 +998,7 @@ rule SplitVepMutect2SingleSamplePoN:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ[\t%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 rule SplitVepMutect2MultisamplePoN:
@@ -1015,7 +1015,7 @@ rule SplitVepMutect2MultisamplePoN:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ[\t%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 # FREEBAYES
@@ -1034,7 +1034,7 @@ rule SplitVepFreebayesSingleSamplePoN:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RO\t%AO\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ[\t%RO\t%AO\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 rule SplitVepFreebayesMultisamplePoN:
@@ -1051,7 +1051,7 @@ rule SplitVepFreebayesMultisamplePoN:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RO\t%AO\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ[\t%RO\t%AO\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 # BCFTOOLS 
@@ -1070,7 +1070,7 @@ rule SplitVepBcftoolsSingleSamplePoN:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ[\t%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 rule SplitVepBcftoolsMultisamplePoN:
@@ -1087,7 +1087,7 @@ rule SplitVepBcftoolsMultisamplePoN:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ[\t%AD{{0}}\t%AD{{1}}\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 # VARSCAN 
@@ -1106,7 +1106,7 @@ rule SplitVepVarscanSingleSamplePoN:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ[\t%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
 
 rule SplitVepVarscanMultisamplePoN:
@@ -1123,5 +1123,91 @@ rule SplitVepVarscanMultisamplePoN:
 		"../envs/bcftools.yaml"
 	shell:
 		"""
-		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%POS\t%REF\t%ALT\t%CSQ\t[%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
+		bcftools +split-vep {input.vcf} -f "%CHROM\t%POS\t%REF\t%ALT\t%CSQ[\t%RD\t%AD\t%AF][\t%GT]\n" -d -A tab > {output} 2>{log}
 		"""
+###################################### ADD SAMPLES NAMES ############################################################
+
+
+rule AddSampleNamesMultisamplePoN:
+	input:
+		vcf="results/multisample.{caller}.vep.vcf.gz",
+		tsv="results/multisample.{caller}.vep.tmp01.tsv"
+	output:
+		"results/multisample.{caller}.vep.tmp02.tsv"
+	threads: 1
+	params: 
+		txt="results/{caller}_sample_list.txt", 
+		script="workflow/scripts/add_sample_names_wes.py"
+	log:
+		"logs/{caller}.AddSampleNamesMultisamplePoN.log"
+	shell:
+		"bcftools query -l {input.vcf} | sed 's/_tumor//g' > {params.txt} 2>{log} && "
+		"python {params.script} {input.tsv} {output} {params.txt} 2>>{log} && "
+		"rm {params.txt} 2>>{log}"
+
+
+##################################### Fill empty field with NA #####################################################
+
+
+rule FillEmptyFieldwithNAoneSamplePoN:
+	input:
+		"results/{sample}_tumor/{sample}.{caller}.filtOnCtrs.vep.tmp01.tsv"
+	output:
+		"results/{sample}_tumor/{sample}.{caller}.filtOnCtrs.vep.tmp02.tsv"
+	threads: 1 
+	log:
+		"logs/{sample}.{caller}.FillEmptyFieldwithNAoneSamplePoN.log"
+	shell:
+		"""
+		awk 'BEGIN{{FS=OFS="\t"}} {{for(i=1;i<=NF;i++) if($i==".") $i="NA"}}1' {input} > {output}
+		"""
+
+rule FillEmptyFieldwithNAmultisamplePoN:
+	input:
+		"results/multisample.{caller}.vep.tmp02.tsv"
+	output:
+		"results/multisample.{caller}.vep.tmp03.tsv"
+	threads: 1 
+	log:
+		"logs/{caller}.FillEmptyFieldwithNAoneSamplePoN.log"
+	shell:
+		"""
+		awk 'BEGIN{{FS=OFS="\t"}} {{for(i=1;i<=NF;i++) if($i==".") $i="NA"}}1' {input} > {output}
+		"""
+####################################   FORMATTING HEADER   ############################################################
+
+rule FormattingHeaderSingleSample:
+	input:
+		vcf="results/{sample}_tumor/{sample}.varscan.filtOnCtrs.vep.vcf.gz",
+		fi_tsv="results/{sample}_tumor/{sample}.{caller}.filtOnCtrs.vep.tmp02.tsv"
+	output:
+		fo_tsv="results/{sample}_tumor/{sample}.{caller}.filtOnCtrs.vep.tsv"
+	params:
+		"workflow/scripts/formatting_header.R"
+	threads: 1 
+	log:
+		"logs/{sample}.{caller}.FormattingHeaderSingleSample.log"
+	conda:
+		"../envs/formatHeader.yaml"
+	shell:
+		"Rscript {params} {input.vcf} {input.fi_tsv} {output.fo_tsv}"
+
+rule FormattingHeaderMultisample:
+	input:
+		vcf="results/multisample.{caller}.vep.vcf.gz",
+		fi_tsv="results/multisample.{caller}.vep.tmp03.tsv"
+	output:
+		fo_tsv="results/multisample.{caller}.vep.tsv"
+	params:
+		"workflow/scripts/formatting_header.R"
+	threads: 1 
+	log:
+		"logs/{caller}.FormattingHeaderMultisample.log"
+	conda:
+		"../envs/formatHeader.yaml"
+	shell:
+		"Rscript {params} {input.vcf} {input.fi_tsv} {output.fo_tsv}"
+
+########################## FILTERING BASING ON DATABASE POPULATION AF #########################################
+
+

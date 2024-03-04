@@ -1,8 +1,8 @@
 channels:
- - bioconda
  - conda-forge
- - default
+ - r
+ - bioconda
 dependencies:
- - conda-forge::r-data.table=1.14.10
- - conda-forge::r-readr=2.1.5
- - conda-forge::r-dplyr
+ - r-data.table
+ - r-readr
+ - r-dplyr

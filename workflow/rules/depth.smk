@@ -1,13 +1,15 @@
-rule mosdepth: 
-        input: 
-                "data/bam/{sample}.markdup.bqsr.bam" 
-        output:
-        	"data/bam/{sample}.mosdepth.summary.txt"
-        threads: 4
-        params:
-        	mosdepth="/home/simone/programs/mosdepth-0.3.1/mosdepth",
-        	intervals=config["intervals"],
-        log:
-                "logs/{sample}.mosdepth.log"
-        shell:
-        	"{params.mosdepth} --by {params.intervals} {wildcards.sample} -t {threads} {input} 2> {log}"
+rule Mosdepth:
+    input:
+        bam="alignments/{sample}.tumor.dd.rec.bam",
+        bai="alignments/{sample}.tumor.dd.rec.bai"
+    output:
+        "alignments/{sample}.regions.bed.gz"
+    log:
+        "logs/{sample}.mosdepth.log"
+    conda: "../envs/mosdepth.yaml"
+    threads: 10
+    params:
+        prefix = "alignments/{sample}",
+        target= config["intervals"]
+    shell:
+        "mosdepth --fast-mode -t {threads} --by {params.target} {params.prefix} {input.bam} 2> {log}"

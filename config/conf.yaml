@@ -4,6 +4,8 @@ genome: resources/GRCh38_full_analysis_set_plus_decoy_hla.fa
 
 intervals: resources/SureSelectV8.wes.mod.bed
 
+Strelka2_intervals: resources/SureSelectV8.wes.mod.strelka2.bed.gz
+
 chr_to_exclude: resources/GRCh38_full_analysis_set_plus_decoy_hla.exclude.txt
 
 gnomAD: resources/af-only-gnomad.hg38.norm.vcf.gz
@@ -16,37 +18,23 @@ clinvar: resources/clinvar_20231217.vcf.gz
 
 vepcache: resources/vep/cache/
   
-run_mode: # must be one of the following: nocontrol, PoN , paired
+run_mode: nocontrol # must be one of the following: nocontrol, PoN , paired
 
+Strelka2: resources/strelka-2.9.10.centos6_x86_64/bin/configureStrelkaGermlineWorkflow.py
 
 samples:
 
-  sample1: A0030
-  sample2: A0340
-  sample3: A0734
-  sample4: A0789
-  sample5: A0934
+  sample1: HG00145
+#  sample2: HG00239
+#  sample3: NA20505
 
 strand:
   
   strandR1: R1
   strandR2: R2
 
-controls:
-  
-  control1: CD37493
-  control2: CD31983
-  control3: CD37846
-  control4: CD39887
-  control5: CD3A0066
-
-paired:
-
-    paired1: tumor
-    paired2: germline
-
 # Set number of cores 
-threads: 1
+threads: 20
 
 # PARAMETERS FOR CONTROLS FILTERING 
 filtering_controls:
@@ -64,13 +52,13 @@ filtering_controls:
 filtering_tumors:
   
   ## Minimum read depth to call a variant (100 suggested)   
-  min_depth: 1
+  min_depth: 20
 
   ## Minimum variant allele frequency (5% suggested)  
-  vaf: 0
+  vaf: 0.03
 
   ## Minimum variant supporting reads (5 suggested)   
-  alt_depth: 1
+  alt_depth: 2
 
 
 callers:
@@ -79,3 +67,4 @@ callers:
   caller2: freebayes
   caller3: bcftools
   caller4: varscan
+  caller5: strelka2

@@ -81,7 +81,7 @@ rule FilterMutectCallsTumorNocontrol:
 		segmentation="data/{sample}.tumor.tumorSeg.txt", # from gatk CalculateContamination
 		f1r2="data/{sample}.tumor.artifacts_prior.tar.gz" # from gatk LearnReadOrientationBias
 	output:
-		vcf=temp("results/{sample}_tumor/{sample}.mutect2.FiltMut.vcf.gz"),
+		vcf="results/{sample}_tumor/{sample}.mutect2.FiltMut.vcf.gz",
 	log:
 		"logs/{sample}.FilterMutectCallsTumorNocontrol.log",
 	params:
@@ -185,8 +185,8 @@ rule BcftoolsFilterTumorsNocontrol:
 	input:
 		"results/{sample}_tumor/{sample}.bcftools.addaf.vcf.gz"
 	output:
-		vcf=temp("results/{sample}_tumor/{sample}.bcftools.filt.vcf.gz"),
-		tbi=temp("results/{sample}_tumor/{sample}.bcftools.filt.vcf.gz.tbi")
+		vcf="results/{sample}_tumor/{sample}.bcftools.filt.vcf.gz",
+		tbi="results/{sample}_tumor/{sample}.bcftools.filt.vcf.gz.tbi"
 	threads: 1
 	params:
 		config["chr_to_exclude"],
@@ -240,7 +240,7 @@ rule VarscanCallSnvTumorsNocontrol:
 		"logs/{sample}.VarscanCallSnvTumorsNocontrol.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} |"
-		"varscan mpileup2snp --output-vcf --min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1 |"
+		"varscan mpileup2snp --strand-filter 1 --output-vcf --min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1 |"
 		"bgzip -c > {output.vcf_snv} 2>{log} &&"
 		"tabix -p vcf {output.vcf_snv} 2>>{log}"
 
@@ -261,7 +261,7 @@ rule VarscanCallIndelTumorsNocontrol:
 		"logs/{sample}.VarscanCallIndelTumorsNocontrol.log"
 	shell:
 		"samtools mpileup -l {params.intervals} -f {params.ref} {input.bam} | "
-		"varscan mpileup2indel --output-vcf --min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1 | "
+		"varscan mpileup2indel --strand-filter 1 --output-vcf --min-avg-qual 1 --p-value 1 --min-var-freq 0 --min-coverage 1 --min-reads2 1 | "
 		"bgzip -c > {output.vcf_indel} 2>{log} && "
 		"tabix -p vcf {output.vcf_indel} 2>>{log}"
 
@@ -272,7 +272,7 @@ rule VarscanConcatTumorNocontrol:
 		tbi_snv="results/{sample}_tumor/{sample}.varscan.snv.vcf.gz.tbi",
 		tbi_indel="results/{sample}_tumor/{sample}.varscan.indel.vcf.gz.tbi"
 	output:
-		temp("results/{sample}_tumor/{sample}.varscan.concat.tmp.vcf.gz")
+		"results/{sample}_tumor/{sample}.varscan.concat.tmp.vcf.gz"
 	params: 
 		config["genome"]
 	threads: 1
@@ -439,6 +439,39 @@ rule MergeFreebayesTumorOutputNocontrol:
 	shell:
 		"bcftools merge -m none -Oz -o {output.vcf} {input.vcf} 2>{log} && "
 		"tabix -p vcf {output.vcf} 2>>{log}"
+
+
+########################################################################### Strelka 2 ###########################################################################
+
+rule Strelka2Configuration:
+	input:
+		"alignments/{sample}.tumor.dd.rec.bam"
+	output:
+		"results/{sample}_tumor/strelka2/runWorkflow.py"
+	threads: 1
+	log:
+		"logs/{sample}.Strelka2Configuration.log"
+	params:
+		target=config["Strelka2_intervals"],
+		ref=config["genome"],
+		strelka2=config["Strelka2"]
+	shell:
+		"{params.strelka2} --bam {input} --referenceFasta {params.ref} --runDir results/{wildcards.sample}_tumor/strelka2/ --callRegions {params.target} 2>{log}"
+
+
+rule RunStrelka2:
+	input:
+		"results/{sample}_tumor/strelka2/runWorkflow.py"
+	output:
+		"results/{sample}_tumor/{sample}.strelka2.vcf.gz"
+	threads: 40
+	log:
+		"logs/{sample}.RunStrelka2.log"
+	params:
+		tmp="results/{sample}_tumor/strelka2/results/variants/variants.vcf.gz",
+		ref=config["genome"]
+	shell:
+		"{input} -m local -j {threads} && bcftools norm -O z -m - -f {params.ref} -o {output} {params.tmp}"
 
 
 ########################################################################### VEP ###########################################################################
